@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nuzlocke Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0d0d18;
+  --surface:  #16162a;
+  --surface2: #1f1f38;
+  --surface3: #282845;
+  --border:   #2a2a48;
+  --red:      #e63946;
+  --red-dark: #7b0d14;
+  --gold:     #ffd166;
+  --gold-dark:#7a5c00;
+  --green:    #06d6a0;
+  --green-dk: #034d38;
+  --blue:     #4cc9f0;
+  --muted:    #5a5a80;
+  --text:     #e8e8f2;
+  --text2:    #9898c0;
+  --font-px:  'Press Start 2P', monospace;
+  --font:     'DM Sans', sans-serif;
+  --sidebar-w: 200px;
+  --header-h:  56px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* grid bg */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(230,57,70,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230,57,70,.025) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none; z-index:0;
+}
+
+/* ═══════════════════════════════════════
+   LOADING
+═══════════════════════════════════════ */
+#loading {
+  position:fixed; inset:0;
+  background:var(--bg); z-index:9999;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:20px;
+}
+.load-ball {
+  width:60px; height:60px;
+  animation:bounce 1s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(-18px) rotate(180deg)}
+}
+#loading p {
+  font-family:var(--font-px); font-size:10px; color:var(--muted);
+  animation:blink 1s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ═══════════════════════════════════════
+   SETUP PAGE (full screen, no sidebar)
+═══════════════════════════════════════ */
+#pg-setup {
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:40px 20px; position:relative; z-index:1;
+}
+.setup-box { width:100%; max-width:480px; }
+.setup-logo { text-align:center; margin-bottom:36px; }
+.pb-big {
+  width:80px; height:80px; margin:0 auto 16px;
+  animation:wobble 3s ease-in-out infinite;
+}
+@keyframes wobble{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+
+.px-title {
+  font-family:var(--font-px);
+  font-size:clamp(10px,2vw,16px);
+  color:var(--red);
+  text-shadow:3px 3px 0 var(--red-dark), 0 0 28px rgba(230,57,70,.35);
+  line-height:1.7;
+}
+.px-sub {
+  font-family:var(--font-px);
+  font-size:clamp(7px,1.1vw,10px);
+  color:var(--gold);
+  text-shadow:2px 2px 0 var(--gold-dark);
+}
+
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:24px;
+  box-shadow:0 4px 28px rgba(0,0,0,.45);
+}
+
+/* form elements */
+.field { margin-bottom:16px; }
+label {
+  display:block; margin-bottom:6px;
+  font-size:11px; font-weight:600; color:var(--text2);
+  text-transform:uppercase; letter-spacing:.08em;
+}
+input, textarea, select {
+  width:100%; padding:10px 14px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; color:var(--text);
+  font-family:var(--font); font-size:14px;
+  outline:none; transition:border-color .15s;
+}
+input:focus, textarea:focus { border-color:var(--red); }
+input::placeholder { color:var(--muted); }
+
+.row { display:flex; gap:10px; }
+.row input { flex:1; }
+
+/* buttons */
+.btn {
+  font-family:var(--font-px); font-size:9px;
+  padding:11px 18px; border:none; border-radius:7px;
+  cursor:pointer; transition:all .15s;
+  text-transform:uppercase; letter-spacing:.04em;
+  white-space:nowrap;
+}
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn-red   { background:var(--red);   color:#fff;     box-shadow:0 4px 0 var(--red-dark); }
+.btn-gold  { background:var(--gold);  color:#1a1200;  box-shadow:0 4px 0 var(--gold-dark); }
+.btn-green { background:var(--green); color:#001a10;  box-shadow:0 4px 0 var(--green-dk); }
+.btn-ghost { background:var(--surface2); color:var(--text2); border:1px solid var(--border); box-shadow:0 4px 0 #0a0a12; }
+.btn-red:hover,  .btn-red:not(:disabled):hover   { transform:translateY(-2px); box-shadow:0 6px 0 var(--red-dark); }
+.btn-gold:hover, .btn-gold:not(:disabled):hover  { transform:translateY(-2px); box-shadow:0 6px 0 var(--gold-dark); }
+.btn-green:hover,.btn-green:not(:disabled):hover { transform:translateY(-2px); box-shadow:0 6px 0 var(--green-dk); }
+.btn-ghost:hover { background:var(--surface3); color:var(--text); transform:translateY(-2px); }
+.btn:active { transform:translateY(2px) !important; }
+.btn-sm  { font-size:7px; padding:8px 13px; }
+.btn-xs  { font-size:6px; padding:6px 10px; }
+.btn-full{ width:100%; }
+
+/* participant list */
+.p-list { list-style:none; margin-bottom:12px; }
+.p-item {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:9px 14px; margin-bottom:7px;
+  animation:slidein .2s ease;
+}
+@keyframes slidein{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.p-item span { flex:1; font-weight:500; font-size:14px; }
+.p-remove {
+  background:none; border:none; color:var(--muted);
+  cursor:pointer; font-size:18px; padding:2px 5px;
+  border-radius:4px; transition:color .15s; line-height:1;
+}
+.p-remove:hover { color:var(--red); }
+
+.divider { height:1px; background:var(--border); margin:20px 0; }
+.text-muted { color:var(--muted); font-size:13px; }
+.mt8{margin-top:8px} .mt16{margin-top:16px} .mt20{margin-top:20px}
+.center{text-align:center}
+
+/* ═══════════════════════════════════════
+   APP SHELL (sidebar + main)
+═══════════════════════════════════════ */
+#app-shell {
+  display:none;
+  min-height:100vh;
+  position:relative; z-index:1;
+}
+#app-shell.visible { display:flex; }
+
+/* SIDEBAR */
+.sidebar {
+  width:var(--sidebar-w);
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  position:fixed; top:0; left:0; bottom:0;
+  z-index:50;
+}
+.sidebar-logo {
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer;
+}
+.sidebar-logo svg { width:30px; height:30px; flex-shrink:0; }
+.sidebar-logo-text { font-family:var(--font-px); font-size:7px; color:var(--red); line-height:1.6; }
+
+.sidebar-player {
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.sidebar-player-label { font-size:10px; color:var(--muted); margin-bottom:3px; }
+.sidebar-player-name  { font-family:var(--font-px); font-size:8px; color:var(--gold); }
+
+.sidebar-nav { flex:1; padding:8px 0; overflow-y:auto; }
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 18px;
+  cursor:pointer;
+  font-size:13px; font-weight:500;
+  color:var(--text2);
+  border-left:3px solid transparent;
+  transition:all .15s;
+  user-select:none;
+}
+.nav-item:hover { background:var(--surface2); color:var(--text); }
+.nav-item.active {
+  background:rgba(230,57,70,.1);
+  color:var(--red);
+  border-left-color:var(--red);
+}
+.nav-item.active.gold-tab {
+  background:rgba(255,209,102,.08);
+  color:var(--gold);
+  border-left-color:var(--gold);
+}
+.nav-icon { font-size:18px; width:22px; text-align:center; }
+.nav-badge {
+  margin-left:auto;
+  background:var(--green); color:#001a10;
+  font-size:9px; font-weight:700;
+  padding:2px 6px; border-radius:10px;
+}
+
+.sidebar-footer {
+  padding:14px 16px;
+  border-top:1px solid var(--border);
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left:var(--sidebar-w);
+  flex:1;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+}
+
+/* TAB PANELS */
+.tab-panel { display:none; flex:1; padding:28px; }
+.tab-panel.active { display:block; }
+
+/* ═══════════════════════════════════════
+   SELECT PLAYER TAB
+═══════════════════════════════════════ */
+.player-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+  gap:14px; margin-top:20px;
+}
+.player-card {
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:22px 14px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+}
+.player-card:hover {
+  border-color:var(--red);
+  background:rgba(230,57,70,.07);
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(230,57,70,.18);
+}
+.player-card.selected-card {
+  border-color:var(--gold);
+  background:rgba(255,209,102,.08);
+}
+.player-card .pc-avatar { font-size:36px; display:block; margin-bottom:10px; }
+.player-card .pc-name   { font-weight:600; font-size:15px; color:var(--text); }
+.player-card .pc-status { font-size:11px; color:var(--muted); margin-top:5px; }
+.player-card.done .pc-name { color:var(--green); }
+.player-card.done { border-color:var(--green); }
+
+/* confirm bar */
+.confirm-bar {
+  display:none; align-items:center; justify-content:space-between;
+  background:rgba(255,209,102,.08); border:1px solid var(--gold);
+  border-radius:10px; padding:14px 18px; margin-top:20px; gap:12px;
+}
+.confirm-bar.show { display:flex; }
+.confirm-bar-text { font-size:14px; color:var(--text); }
+.confirm-bar-text strong { color:var(--gold); }
+
+/* ═══════════════════════════════════════
+   PICKS TAB
+═══════════════════════════════════════ */
+.picks-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:20px; flex-wrap:wrap; gap:12px;
+}
+.recipient-tabs {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
+}
+.r-tab {
+  font-family:var(--font-px); font-size:7px;
+  padding:8px 13px; border-radius:20px;
+  cursor:pointer; border:1px solid var(--border);
+  background:var(--surface2); color:var(--text2);
+  transition:all .15s;
+}
+.r-tab:hover { border-color:var(--text2); color:var(--text); }
+.r-tab.active { background:var(--red); color:#fff; border-color:var(--red); }
+.r-tab.r-done { border-color:var(--green); color:var(--green); }
+.r-tab.r-done.active { background:var(--green); color:#001a10; }
+
+/* selected picks display */
+.sel-picks {
+  display:flex; gap:14px; flex-wrap:wrap;
+  padding:16px; margin-bottom:16px;
+  background:var(--surface2); border-radius:10px;
+  border:1px dashed var(--border);
+  min-height:90px; align-items:center;
+}
+.pick-slot { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:80px; }
+.pick-slot img { width:96px; height:96px; image-rendering:crisp-edges; image-rendering:pixelated; }
+.pick-slot .ps-name { font-size:10px; font-weight:600; color:var(--text2); text-align:center; }
+.pick-slot .ps-num  { font-family:var(--font-px); font-size:6px; color:var(--muted); }
+.pick-slot.empty .empty-box {
+  width:56px; height:56px;
+  border:2px dashed var(--border); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted); font-size:22px;
+}
+.pick-slot .ps-rm {
+  background:none; border:none; color:var(--muted);
+  cursor:pointer; font-size:11px; transition:color .15s;
+}
+.pick-slot .ps-rm:hover { color:var(--red); }
+
+/* pokemon grid */
+.poke-search-wrap { position:relative; margin-bottom:14px; }
+.poke-search-wrap input { padding-left:40px; }
+.search-ico {
+  position:absolute; left:13px; top:50%;
+  transform:translateY(-50%); color:var(--muted); font-size:16px; pointer-events:none;
+}
+.poke-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(108px, 1fr));
+  gap:7px; max-height:360px; overflow-y:auto;
+  padding:4px;
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+}
+.pk-card {
+  background:var(--surface2); border:2px solid var(--border);
+  border-radius:8px; padding:7px 4px;
+  text-align:center; cursor:pointer;
+  transition:all .12s; user-select:none; min-width:108px;
+}
+.pk-card:hover { border-color:var(--gold); transform:translateY(-2px); }
+.pk-card.pk-sel { border-color:var(--gold); background:rgba(255,209,102,.1); }
+.pk-card.pk-used { opacity:.3; cursor:not-allowed; }
+.pk-card .pk-dex  { font-size:8px; color:var(--muted); margin-bottom:2px; }
+.pk-card .pk-name { font-size:10px; font-weight:600; color:var(--text2); }
+.pk-card img { width:96px; height:96px; image-rendering:crisp-edges; image-rendering:pixelated; display:block; margin:0 auto; }
+
+
+
+/* ═══════════════════════════════════════
+   SUMMARY TAB
+═══════════════════════════════════════ */
+/* ── MATRIX LAYOUT ── */
+.matrix-wrap {
+  width:100%; overflow-x:auto;
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+}
+.matrix-table {
+  border-collapse:collapse;
+  table-layout:auto;
+}
+.matrix-corner {
+  background:var(--bg); padding:6px 8px;
+  border:1px solid var(--border);
+  vertical-align:bottom; min-width:80px; width:80px;
+}
+.matrix-corner-label {
+  font-size:8px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.05em;
+  font-weight:600; line-height:1.5;
+}
+/* column header = recipient */
+.matrix-col-header {
+  background:var(--surface2); border:1px solid var(--border);
+  padding:8px 6px; text-align:center; vertical-align:bottom;
+}
+.mch-avatar { font-size:20px; display:block; margin-bottom:3px; }
+.mch-name   { font-family:var(--font-px); font-size:7px; color:var(--text); display:block; margin-bottom:6px; }
+.mch-badges { display:flex; gap:2px; justify-content:center; flex-wrap:wrap; }
+
+/* row header = picker */
+.matrix-row-header {
+  background:var(--surface2); border:1px solid var(--border);
+  padding:0 8px; vertical-align:middle;
+  text-align:right; white-space:nowrap;
+}
+.mrh-inner { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.mrh-avatar { font-size:16px; line-height:1; }
+.mrh-name   { font-family:var(--font-px); font-size:6px; color:var(--text2); }
+
+/* cell */
+.matrix-cell {
+  border:1px solid var(--border);
+  padding:4px; vertical-align:middle;
+  background:var(--surface);
+}
+.matrix-cell.mc-self { background:rgba(255,209,102,.03); }
+.cell-picks { display:flex; gap:4px; align-items:center; justify-content:center; }
+
+/* poke card: sprite + name stacked, as tall as sprite allows */
+.m-poke {
+  background:var(--surface2); border:2px solid var(--border);
+  border-radius:6px; padding:3px;
+  text-align:center; position:relative;
+  transition:border-color .15s; flex-shrink:0;
+  width:86px;
+}
+.m-poke:hover { border-color:var(--text2); }
+.m-poke.mp-dead { opacity:.45; border-color:#333; }
+.m-poke.mp-dead img { filter:grayscale(1); }
+.m-poke.mp-hidden { border-style:dashed; background:var(--surface); }
+.m-poke img {
+  width:80px; height:80px;
+  image-rendering:crisp-edges; image-rendering:pixelated;
+  display:block; margin:0 auto;
+}
+/* nickname: editable inline */
+.mp-nickname {
+  font-size:9px; font-weight:600; color:var(--text);
+  line-height:1.2; margin-top:2px;
+  display:block; width:100%; text-align:center;
+  background:transparent; border:none; outline:none;
+  font-family:var(--font); cursor:text;
+  padding:0 2px;
+  border-bottom:1px solid transparent;
+  transition:border-color .15s;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.mp-nickname:hover  { border-bottom-color:var(--border); }
+.mp-nickname:focus  { border-bottom-color:var(--gold); color:var(--gold); }
+.mp-realname {
+  font-size:8px; color:var(--muted); display:block;
+  text-align:center; line-height:1.2;
+}
+.mp-dead-btn {
+  position:absolute; top:0; left:0; right:0;
+  height:88px; /* covers just the sprite */
+  background:none; border:none; cursor:pointer;
+  padding:3px 4px; border-radius:6px 6px 0 0;
+  display:flex; align-items:flex-start; justify-content:flex-end;
+  z-index:2;
+}
+.mp-dead-btn .dead-icon {
+  font-size:11px; opacity:.5; transition:opacity .15s; line-height:1;
+  pointer-events:none;
+}
+.mp-dead-btn:hover .dead-icon { opacity:1; }
+.mp-dead-btn:hover { background:rgba(255,255,255,.04); }
+.mp-hidden-inner {
+  width:80px; height:80px; background:var(--surface3); border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto; font-size:30px;
+}
+.mp-empty { font-size:11px; color:var(--border); padding:8px; text-align:center; width:100%; }
+
+/* badge icons using real images */
+.badge-ico {
+  width:24px; height:24px; border-radius:4px;
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s;
+  border:2px solid transparent;
+  background:var(--surface3);
+  filter:grayscale(1) opacity(.25);
+  overflow:hidden;
+}
+.badge-ico img { width:20px; height:20px; object-fit:contain; }
+.badge-ico.earned {
+  filter:none;
+  border-color:var(--gold);
+  box-shadow:0 0 8px rgba(255,209,102,.5);
+  background:rgba(255,209,102,.1);
+}
+.badge-ico:hover { transform:scale(1.18); filter:grayscale(.2) opacity(.7); }
+.badge-ico.earned:hover { filter:none; transform:scale(1.18); }
+
+.badge-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+
+.summary-player-body {
+  border:1px solid var(--border); border-top:none;
+  border-radius:0 0 10px 10px;
+  padding:16px;
+  background:var(--surface);
+}
+
+.picker-group { margin-bottom:16px; }
+.picker-label {
+  font-size:10px; font-weight:600; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.08em;
+  margin-bottom:9px;
+}
+.dash-picks-row { display:flex; gap:10px; flex-wrap:wrap; }
+
+.d-poke-card {
+  background:var(--surface2); border:2px solid var(--border);
+  border-radius:10px; padding:10px 7px;
+  text-align:center; width:106px; position:relative;
+  transition:all .18s;
+}
+.d-poke-card.dp-dead {
+  background:rgba(30,30,50,1); border-color:#333; opacity:.65;
+}
+.d-poke-card.dp-dead img { filter:grayscale(1) opacity(.45); }
+.d-poke-card.dp-hidden { background:var(--surface); border-style:dashed; }
+.d-poke-card img { width:96px; height:96px; image-rendering:crisp-edges; image-rendering:pixelated; display:block; margin:0 auto 5px; }
+.dp-name { font-size:11px; font-weight:600; color:var(--text2); }
+.dp-dex  { font-size:9px; color:var(--muted); }
+
+.dp-hidden-inner {
+  width:60px; height:60px;
+  background:var(--surface3); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 5px; font-size:26px;
+}
+
+.dead-btn {
+  position:absolute; top:5px; right:5px;
+  background:none; border:none; cursor:pointer;
+  font-size:13px; opacity:.55; transition:opacity .15s; padding:2px;
+}
+.dead-btn:hover { opacity:1; }
+
+.comment-area {
+  margin-top:6px; width:100%;
+  background:transparent; border:none;
+  border-top:1px solid var(--border);
+  padding:5px 0 0; resize:none;
+  min-height:34px; color:var(--muted);
+  font-family:var(--font); font-size:10px;
+  text-align:center; font-style:italic;
+}
+.comment-area:focus { outline:none; }
+.comment-area::placeholder { color:var(--border); }
+
+/* ═══════════════════════════════════════
+   REVEAL NIGHT TAB
+═══════════════════════════════════════ */
+#tab-reveal {
+  display:none; /* overridden by .active */
+  flex-direction:column; align-items:center;
+  justify-content:flex-start; text-align:center;
+}
+#tab-reveal.active { display:flex; }
+
+.reveal-idle {
+  width:100%; max-width:560px; margin:0 auto;
+  padding-top:20px;
+}
+.reveal-idle.hidden { display:none; }
+
+.reveal-stage {
+  width:100%; max-width:680px; margin:0 auto;
+}
+.reveal-stage.hidden { display:none; }
+
+.reveal-ctx  { font-family:var(--font-px); font-size:8px; color:var(--text2); margin-bottom:6px; }
+.reveal-who  {
+  font-family:var(--font-px); font-size:clamp(10px,1.8vw,16px);
+  color:var(--gold); text-shadow:2px 2px 0 var(--gold-dark);
+  margin-bottom:28px; line-height:1.8;
+}
+.reveal-prog { font-family:var(--font-px); font-size:7px; color:var(--muted); margin-bottom:20px; }
+
+.reveal-row {
+  display:flex; justify-content:center;
+  gap:20px; flex-wrap:wrap;
+  margin-bottom:36px; min-height:170px;
+}
+
+.rv-card {
+  background:var(--surface); border:3px solid var(--border);
+  border-radius:14px; padding:18px 14px;
+  width:136px; text-align:center;
+  transition:all .4s cubic-bezier(.175,.885,.32,1.275);
+}
+.rv-card.rv-revealed {
+  border-color:var(--gold);
+  box-shadow:0 0 28px rgba(255,209,102,.28), 0 8px 28px rgba(0,0,0,.4);
+  animation:popin .5s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes popin{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.rv-card img { width:96px; height:96px; image-rendering:crisp-edges; image-rendering:pixelated; display:block; margin:0 auto 8px; }
+.rv-card .rv-name { font-family:var(--font-px); font-size:7px; color:var(--text); line-height:1.6; }
+.rv-card .rv-num  { font-size:10px; color:var(--muted); margin-bottom:5px; }
+.rv-mystery {
+  width:76px; height:76px; background:var(--surface2); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 8px; font-size:36px;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.06);opacity:1}}
+
+.reveal-nav {
+  display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap;
+}
+.reveal-step-count { font-family:var(--font-px); font-size:9px; color:var(--text2); padding:0 10px; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+#toast {
+  position:fixed; bottom:22px; right:22px; z-index:9000;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:13px 18px;
+  font-size:13px; font-weight:500; color:var(--text);
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+  transform:translateY(80px); opacity:0;
+  transition:all .28s; pointer-events:none;
+}
+#toast.show { transform:translateY(0); opacity:1; }
+#toast.t-ok  { border-color:var(--green); color:var(--green); }
+#toast.t-err { border-color:var(--red);   color:var(--red);   }
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+.modal-bg {
+  position:fixed; inset:0; background:rgba(0,0,0,.72);
+  z-index:800; display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-bg.open { display:flex; }
+.modal-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:28px; max-width:420px; width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-box h3 { font-family:var(--font-px); font-size:10px; color:var(--gold); margin-bottom:14px; }
+.modal-box p  { color:var(--text2); font-size:14px; line-height:1.6; margin-bottom:20px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+/* phase chip */
+.phase-chip {
+  font-family:var(--font-px); font-size:6px;
+  padding:4px 9px; border-radius:20px;
+  display:inline-block;
+}
+.ph-picking { background:rgba(6,214,160,.12); color:var(--green); border:1px solid var(--green); }
+.ph-playing { background:rgba(230,57,70,.12); color:var(--red);   border:1px solid var(--red); }
+.ph-reveal  { background:rgba(255,209,102,.12);color:var(--gold); border:1px solid var(--gold); }
+
+/* run id pill */
+.run-id-pill {
+  font-family:var(--font-px); font-size:6px;
+  background:var(--surface3); border:1px solid var(--border);
+  border-radius:20px; padding:5px 10px; color:var(--muted);
+  cursor:pointer; transition:all .15s; display:inline-block;
+}
+.run-id-pill:hover { color:var(--text); border-color:var(--text2); }
+
+@media(max-width:640px){
+  :root{ --sidebar-w:64px; }
+  .nav-item span:not(.nav-icon){ display:none; }
+  .nav-badge { display:none; }
+  .sidebar-player { display:none; }
+  .sidebar-logo-text { display:none; }
+  .tab-panel { padding:16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <svg class="load-ball" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="29" fill="#e63946" stroke="#7b0d14" stroke-width="2"/>
+    <rect x="1" y="27" width="58" height="6" fill="#0d0d18"/>
+    <circle cx="30" cy="30" r="8" fill="#e8e8f2" stroke="#0d0d18" stroke-width="3"/>
+  </svg>
+  <p>Loading...</p>
+</div>
+
+<!-- ══════════════════════════════
+     SETUP PAGE
+══════════════════════════════ -->
+<div id="pg-setup">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <svg class="pb-big" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="38" fill="#e63946" stroke="#7b0d14" stroke-width="3"/>
+        <rect x="2" y="36" width="76" height="8" fill="#0d0d18"/>
+        <circle cx="40" cy="40" r="10" fill="#e8e8f2" stroke="#0d0d18" stroke-width="4"/>
+      </svg>
+      <div class="px-title" style="font-size:14px;margin-bottom:8px">NUZLOCKE TRACKER</div>
+      <div class="px-sub">FIRE RED / LEAF GREEN</div>
+    </div>
+
+    <div class="card">
+      <div class="px-sub" style="margin-bottom:18px">🎮 NEW RUN SETUP</div>
+
+      <div class="field">
+        <label>Run Name</label>
+        <input id="inp-run-name" type="text" placeholder="e.g. The Boys Nuzlocke 2025"/>
+      </div>
+
+      <div class="field">
+        <label>Participants</label>
+        <ul class="p-list" id="p-list"></ul>
+        <div class="row" style="margin-bottom:10px">
+          <input id="inp-pname" type="text" placeholder="Enter a name…"/>
+          <button class="btn btn-ghost" onclick="addParticipant()">Add</button>
+        </div>
+        <div class="text-muted">Add 2–8 players. First added = host.</div>
+      </div>
+
+      <button class="btn btn-red btn-full" onclick="createRun()">Start Run →</button>
+
+      <div class="divider"></div>
+      <div class="center text-muted mt8" style="margin-bottom:12px">Already have a run?</div>
+      <div class="field">
+        <input id="inp-join" type="text" placeholder="Enter 6-letter Run ID…" style="text-transform:uppercase"/>
+      </div>
+      <button class="btn btn-ghost btn-full" onclick="joinRun()">Join Existing Run</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP SHELL
+══════════════════════════════ -->
+<div id="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo" onclick="goToSetup()">
+      <svg viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="29" fill="#e63946" stroke="#7b0d14" stroke-width="2"/>
+        <rect x="1" y="27" width="58" height="6" fill="#0d0d18"/>
+        <circle cx="30" cy="30" r="8" fill="#e8e8f2" stroke="#0d0d18" stroke-width="3"/>
+      </svg>
+      <div class="sidebar-logo-text">NUZLOCKE<br>TRACKER</div>
+    </div>
+
+    <div class="sidebar-player">
+      <div class="sidebar-player-label">Playing as</div>
+      <div class="sidebar-player-name" id="sb-player-name">—</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item" id="nav-select" onclick="showTab('select')">
+        <span class="nav-icon">👤</span>
+        <span>Select Player</span>
+      </div>
+      <div class="nav-item" id="nav-picks" onclick="showTab('picks')">
+        <span class="nav-icon">🎯</span>
+        <span>Picks</span>
+      </div>
+      <div class="nav-item" id="nav-summary" onclick="showTab('summary')">
+        <span class="nav-icon">📋</span>
+        <span>Summary</span>
+      </div>
+      <div class="nav-item" id="nav-reveal" onclick="showTab('reveal')">
+        <span class="nav-icon">🎭</span>
+        <span>Reveal Night</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="run-id-pill" id="sb-run-id" onclick="copyRunId()" title="Click to copy Run ID">ID: ——</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- SELECT PLAYER TAB -->
+    <div class="tab-panel" id="tab-select">
+      <div class="px-title" style="font-size:11px">Select Player</div>
+      <div class="text-muted mt8" id="sel-run-label"></div>
+
+      <div class="player-grid" id="player-grid"></div>
+
+      <div class="confirm-bar" id="confirm-bar">
+        <div class="confirm-bar-text">Playing as <strong id="confirm-name"></strong></div>
+        <button class="btn btn-gold btn-sm" onclick="confirmPlayer()">Confirm & Go to Picks →</button>
+      </div>
+    </div>
+
+    <!-- PICKS TAB -->
+    <div class="tab-panel" id="tab-picks">
+      <div class="picks-header">
+        <div>
+          <div class="px-sub" id="picking-as-label" style="font-size:8px">PICKING AS: —</div>
+          <p class="text-muted mt8" style="font-size:12px">Pick 3 Pokémon for each player</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="autosave-indicator" style="font-size:11px;color:var(--muted);font-style:italic">Auto-saving…</span>
+        </div>
+      </div>
+
+      <!-- Picking UI -->
+      <div id="picking-ui">
+        <div class="recipient-tabs" id="r-tabs"></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <span class="px-sub" id="picking-for-label" style="font-size:8px">FOR: —</span>
+            <span class="text-muted" id="picking-self-note" style="font-size:12px"></span>
+          </div>
+          <div class="sel-picks" id="sel-picks"></div>
+          <div class="divider"></div>
+          <div class="poke-search-wrap">
+            <span class="search-ico">🔍</span>
+            <input type="text" id="poke-search" placeholder="Search by name or Pokédex number…" oninput="filterPokemon()"/>
+          </div>
+          <div class="poke-grid" id="poke-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY TAB -->
+    <div class="tab-panel" id="tab-summary">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <div>
+          <div class="px-title" style="font-size:11px" id="summary-run-name">Run Name</div>
+          <div class="mt8" id="summary-phase-chip"></div>
+        </div>
+      </div>
+      <div id="summary-content"></div>
+    </div>
+
+    <!-- REVEAL NIGHT TAB -->
+    <div class="tab-panel" id="tab-reveal">
+
+      <!-- Idle: choose who to reveal next -->
+      <div class="reveal-idle" id="reveal-idle">
+        <div class="px-title" style="font-size:13px;margin-bottom:10px">🎭 Reveal Night</div>
+        <div class="px-sub mt8" style="margin-bottom:24px">Whose team are we revealing?</div>
+        <div class="card" style="text-align:left;margin-bottom:20px">
+          <div class="px-sub" style="font-size:8px;margin-bottom:14px">HOW IT WORKS</div>
+          <p class="text-muted" style="font-size:13px;line-height:1.7">
+            Pick a player below. Everyone's picks for that player cascade in 3 at a time — click <strong style="color:var(--text)">Next</strong> to load each picker's contribution. Then choose the next player to reveal.
+          </p>
+        </div>
+        <div id="reveal-submit-warning" style="display:none;margin-bottom:16px">
+          <div class="text-muted" style="font-size:12px;color:var(--gold)">⚠️ Not all picks are in yet. Some slots may be empty.</div>
+        </div>
+        <div class="player-grid" id="reveal-player-pick" style="margin-bottom:20px"></div>
+        <div class="mt16 center" style="display:flex;flex-direction:column;gap:10px;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="exitReveal()">← Back to Summary</button>
+          <button class="btn btn-ghost btn-xs" onclick="confirmRevertPhase()" style="color:var(--muted)">↺ Revert to Picking Phase</button>
+        </div>
+      </div>
+
+      <!-- Active reveal stage -->
+      <div class="reveal-stage hidden" id="reveal-stage">
+        <!-- recipient header stays visible throughout -->
+        <div style="text-align:center;margin-bottom:20px">
+          <div class="reveal-ctx" id="rv-ctx"></div>
+          <div class="reveal-who" id="rv-who"></div>
+          <div class="reveal-prog" id="rv-prog"></div>
+        </div>
+        <!-- revealed so far (accumulates as you click Next) -->
+        <div id="rv-all-rows"></div>
+        <!-- current pending row -->
+        <div class="reveal-row" id="rv-row"></div>
+        <div class="reveal-nav" style="margin-top:24px">
+          <div class="reveal-step-count" id="rv-count"></div>
+          <button class="btn btn-gold btn-sm" id="rv-next" onclick="revealNext()">Next →</button>
+        </div>
+        <div class="mt20 center">
+          <button class="btn btn-ghost btn-xs" onclick="exitReveal()">Exit Reveal</button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-box">
+    <h3 id="m-title"></h3>
+    <p  id="m-body"></p>
+    <div class="modal-actions" id="m-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════
+     FIREBASE + APP LOGIC
+══════════════════════════════ -->
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ6CRd_1_j6rb_nRtxPZHZkgmSPc_4Lzk",
+  authDomain: "group-nuzlocke.firebaseapp.com",
+  projectId: "group-nuzlocke",
+  storageBucket: "group-nuzlocke.firebasestorage.app",
+  messagingSenderId: "1034241029036",
+  appId: "1:1034241029036:web:5eceb493cdb43b3e868009",
+  measurementId: "G-MSZY2C1WXS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+/* ──────────────────────────────
+   STATIC DATA
+────────────────────────────── */
+const POKEMON = [
+  [1,"Bulbasaur"],[2,"Ivysaur"],[3,"Venusaur"],[4,"Charmander"],[5,"Charmeleon"],[6,"Charizard"],
+  [7,"Squirtle"],[8,"Wartortle"],[9,"Blastoise"],[10,"Caterpie"],[11,"Metapod"],[12,"Butterfree"],
+  [13,"Weedle"],[14,"Kakuna"],[15,"Beedrill"],[16,"Pidgey"],[17,"Pidgeotto"],[18,"Pidgeot"],
+  [19,"Rattata"],[20,"Raticate"],[21,"Spearow"],[22,"Fearow"],[23,"Ekans"],[24,"Arbok"],
+  [25,"Pikachu"],[26,"Raichu"],[27,"Sandshrew"],[28,"Sandslash"],[29,"Nidoran♀"],[30,"Nidorina"],
+  [31,"Nidoqueen"],[32,"Nidoran♂"],[33,"Nidorino"],[34,"Nidoking"],[35,"Clefairy"],[36,"Clefable"],
+  [37,"Vulpix"],[38,"Ninetales"],[39,"Jigglypuff"],[40,"Wigglytuff"],[41,"Zubat"],[42,"Golbat"],
+  [43,"Oddish"],[44,"Gloom"],[45,"Vileplume"],[46,"Paras"],[47,"Parasect"],[48,"Venonat"],
+  [49,"Venomoth"],[50,"Diglett"],[51,"Dugtrio"],[52,"Meowth"],[53,"Persian"],[54,"Psyduck"],
+  [55,"Golduck"],[56,"Mankey"],[57,"Primeape"],[58,"Growlithe"],[59,"Arcanine"],[60,"Poliwag"],
+  [61,"Poliwhirl"],[62,"Poliwrath"],[63,"Abra"],[64,"Kadabra"],[65,"Alakazam"],[66,"Machop"],
+  [67,"Machoke"],[68,"Machamp"],[69,"Bellsprout"],[70,"Weepinbell"],[71,"Victreebel"],[72,"Tentacool"],
+  [73,"Tentacruel"],[74,"Geodude"],[75,"Graveler"],[76,"Golem"],[77,"Ponyta"],[78,"Rapidash"],
+  [79,"Slowpoke"],[80,"Slowbro"],[81,"Magnemite"],[82,"Magneton"],[83,"Farfetch'd"],[84,"Doduo"],
+  [85,"Dodrio"],[86,"Seel"],[87,"Dewgong"],[88,"Grimer"],[89,"Muk"],[90,"Shellder"],
+  [91,"Cloyster"],[92,"Gastly"],[93,"Haunter"],[94,"Gengar"],[95,"Onix"],[96,"Drowzee"],
+  [97,"Hypno"],[98,"Krabby"],[99,"Kingler"],[100,"Voltorb"],[101,"Electrode"],[102,"Exeggcute"],
+  [103,"Exeggutor"],[104,"Cubone"],[105,"Marowak"],[106,"Hitmonlee"],[107,"Hitmonchan"],[108,"Lickitung"],
+  [109,"Koffing"],[110,"Weezing"],[111,"Rhyhorn"],[112,"Rhydon"],[113,"Chansey"],[114,"Tangela"],
+  [115,"Kangaskhan"],[116,"Horsea"],[117,"Seadra"],[118,"Goldeen"],[119,"Seaking"],[120,"Staryu"],
+  [121,"Starmie"],[122,"Mr. Mime"],[123,"Scyther"],[124,"Jynx"],[125,"Electabuzz"],[126,"Magmar"],
+  [127,"Pinsir"],[128,"Tauros"],[129,"Magikarp"],[130,"Gyarados"],[131,"Lapras"],[132,"Ditto"],
+  [133,"Eevee"],[134,"Vaporeon"],[135,"Jolteon"],[136,"Flareon"],[137,"Porygon"],[138,"Omanyte"],
+  [139,"Omastar"],[140,"Kabuto"],[141,"Kabutops"],[142,"Aerodactyl"],[143,"Snorlax"],[144,"Articuno"],
+  [145,"Zapdos"],[146,"Moltres"],[147,"Dratini"],[148,"Dragonair"],[149,"Dragonite"],[150,"Mewtwo"],
+  [151,"Mew"],[152,"Chikorita"],[153,"Bayleef"],[154,"Meganium"],[155,"Cyndaquil"],[156,"Quilava"],
+  [157,"Typhlosion"],[158,"Totodile"],[159,"Croconaw"],[160,"Feraligatr"],[161,"Sentret"],[162,"Furret"],
+  [163,"Hoothoot"],[164,"Noctowl"],[165,"Ledyba"],[166,"Ledian"],[167,"Spinarak"],[168,"Ariados"],
+  [169,"Crobat"],[170,"Chinchou"],[171,"Lanturn"],[172,"Pichu"],[173,"Cleffa"],[174,"Igglybuff"],
+  [175,"Togepi"],[176,"Togetic"],[177,"Natu"],[178,"Xatu"],[179,"Mareep"],[180,"Flaaffy"],
+  [181,"Ampharos"],[182,"Bellossom"],[183,"Marill"],[184,"Azumarill"],[185,"Sudowoodo"],[186,"Politoed"],
+  [187,"Hoppip"],[188,"Skiploom"],[189,"Jumpluff"],[190,"Aipom"],[191,"Sunkern"],[192,"Sunflora"],
+  [193,"Yanma"],[194,"Wooper"],[195,"Quagsire"],[196,"Espeon"],[197,"Umbreon"],[198,"Murkrow"],
+  [199,"Slowking"],[200,"Misdreavus"],[201,"Unown"],[202,"Wobbuffet"],[203,"Girafarig"],[204,"Pineco"],
+  [205,"Forretress"],[206,"Dunsparce"],[207,"Gligar"],[208,"Steelix"],[209,"Snubbull"],[210,"Granbull"],
+  [211,"Qwilfish"],[212,"Scizor"],[213,"Shuckle"],[214,"Heracross"],[215,"Sneasel"],[216,"Teddiursa"],
+  [217,"Ursaring"],[218,"Slugma"],[219,"Magcargo"],[220,"Swinub"],[221,"Piloswine"],[222,"Corsola"],
+  [223,"Remoraid"],[224,"Octillery"],[225,"Delibird"],[226,"Mantine"],[227,"Skarmory"],[228,"Houndour"],
+  [229,"Houndoom"],[230,"Kingdra"],[231,"Phanpy"],[232,"Donphan"],[233,"Porygon2"],[234,"Stantler"],
+  [235,"Smeargle"],[236,"Tyrogue"],[237,"Hitmontop"],[238,"Smoochum"],[239,"Elekid"],[240,"Magby"],
+  [241,"Miltank"],[242,"Blissey"],[243,"Raikou"],[244,"Entei"],[245,"Suicune"],[246,"Larvitar"],
+  [247,"Pupitar"],[248,"Tyranitar"],[249,"Lugia"],[250,"Ho-Oh"],[251,"Celebi"],[252,"Treecko"],
+  [253,"Grovyle"],[254,"Sceptile"],[255,"Torchic"],[256,"Combusken"],[257,"Blaziken"],[258,"Mudkip"],
+  [259,"Marshtomp"],[260,"Swampert"],[261,"Poochyena"],[262,"Mightyena"],[263,"Zigzagoon"],[264,"Linoone"],
+  [265,"Wurmple"],[266,"Silcoon"],[267,"Beautifly"],[268,"Cascoon"],[269,"Dustox"],[270,"Lotad"],
+  [271,"Lombre"],[272,"Ludicolo"],[273,"Seedot"],[274,"Nuzleaf"],[275,"Shiftry"],[276,"Taillow"],
+  [277,"Swellow"],[278,"Wingull"],[279,"Pelipper"],[280,"Ralts"],[281,"Kirlia"],[282,"Gardevoir"],
+  [283,"Surskit"],[284,"Masquerain"],[285,"Shroomish"],[286,"Breloom"],[287,"Slakoth"],[288,"Vigoroth"],
+  [289,"Slaking"],[290,"Nincada"],[291,"Ninjask"],[292,"Shedinja"],[293,"Whismur"],[294,"Loudred"],
+  [295,"Exploud"],[296,"Makuhita"],[297,"Hariyama"],[298,"Azurill"],[299,"Nosepass"],[300,"Skitty"],
+  [301,"Delcatty"],[302,"Sableye"],[303,"Mawile"],[304,"Aron"],[305,"Lairon"],[306,"Aggron"],
+  [307,"Meditite"],[308,"Medicham"],[309,"Electrike"],[310,"Manectric"],[311,"Plusle"],[312,"Minun"],
+  [313,"Volbeat"],[314,"Illumise"],[315,"Roselia"],[316,"Gulpin"],[317,"Swalot"],[318,"Carvanha"],
+  [319,"Sharpedo"],[320,"Wailmer"],[321,"Wailord"],[322,"Numel"],[323,"Camerupt"],[324,"Torkoal"],
+  [325,"Spoink"],[326,"Grumpig"],[327,"Spinda"],[328,"Trapinch"],[329,"Vibrava"],[330,"Flygon"],
+  [331,"Cacnea"],[332,"Cacturne"],[333,"Swablu"],[334,"Altaria"],[335,"Zangoose"],[336,"Seviper"],
+  [337,"Lunatone"],[338,"Solrock"],[339,"Barboach"],[340,"Whiscash"],[341,"Corphish"],[342,"Crawdaunt"],
+  [343,"Baltoy"],[344,"Claydol"],[345,"Lileep"],[346,"Cradily"],[347,"Anorith"],[348,"Armaldo"],
+  [349,"Feebas"],[350,"Milotic"],[351,"Castform"],[352,"Kecleon"],[353,"Shuppet"],[354,"Banette"],
+  [355,"Duskull"],[356,"Dusclops"],[357,"Tropius"],[358,"Chimecho"],[359,"Absol"],[360,"Wynaut"],
+  [361,"Snorunt"],[362,"Glalie"],[363,"Spheal"],[364,"Sealeo"],[365,"Walrein"],[366,"Clamperl"],
+  [367,"Huntail"],[368,"Gorebyss"],[369,"Relicanth"],[370,"Luvdisc"],[371,"Bagon"],[372,"Shelgon"],
+  [373,"Salamence"],[374,"Beldum"],[375,"Metang"],[376,"Metagross"],[377,"Regirock"],[378,"Regice"],
+  [379,"Registeel"],[380,"Latias"],[381,"Latios"],[382,"Kyogre"],[383,"Groudon"],[384,"Rayquaza"],
+  [385,"Jirachi"],[386,"Deoxys"]
+];
+
+// Pokémon types (primary type per dex number, 1-386)
+// [primary, secondary] — null if single type
+const POKE_TYPES = {
+  1:['grass','poison'],2:['grass','poison'],3:['grass','poison'],
+  4:['fire',null],5:['fire',null],6:['fire','flying'],
+  7:['water',null],8:['water',null],9:['water',null],
+  10:['bug',null],11:['bug',null],12:['bug','flying'],
+  13:['bug','poison'],14:['bug','poison'],15:['bug','poison'],
+  16:['normal','flying'],17:['normal','flying'],18:['normal','flying'],
+  19:['normal',null],20:['normal',null],21:['normal','flying'],22:['normal','flying'],
+  23:['poison',null],24:['poison',null],
+  25:['electric',null],26:['electric',null],
+  27:['ground',null],28:['ground',null],
+  29:['poison',null],30:['poison',null],31:['poison','ground'],
+  32:['poison',null],33:['poison',null],34:['poison','ground'],
+  35:['normal',null],36:['normal',null],
+  37:['fire',null],38:['fire',null],
+  39:['normal',null],40:['normal',null],
+  41:['poison','flying'],42:['poison','flying'],
+  43:['grass','poison'],44:['grass','poison'],45:['grass','poison'],
+  46:['bug','grass'],47:['bug','grass'],
+  48:['bug','poison'],49:['bug','poison'],
+  50:['ground',null],51:['ground',null],
+  52:['normal',null],53:['normal',null],
+  54:['water',null],55:['water',null],
+  56:['fighting',null],57:['fighting',null],
+  58:['fire',null],59:['fire',null],
+  60:['water',null],61:['water',null],62:['water','fighting'],
+  63:['psychic',null],64:['psychic',null],65:['psychic',null],
+  66:['fighting',null],67:['fighting',null],68:['fighting',null],
+  69:['grass','poison'],70:['grass','poison'],71:['grass','poison'],
+  72:['water','poison'],73:['water','poison'],
+  74:['rock','ground'],75:['rock','ground'],76:['rock','ground'],
+  77:['fire',null],78:['fire',null],
+  79:['water','psychic'],80:['water','psychic'],
+  81:['electric','steel'],82:['electric','steel'],
+  83:['normal','flying'],
+  84:['normal','flying'],85:['normal','flying'],
+  86:['water',null],87:['water','ice'],
+  88:['poison',null],89:['poison',null],
+  90:['water',null],91:['water','ice'],
+  92:['ghost','poison'],93:['ghost','poison'],94:['ghost','poison'],
+  95:['rock','ground'],
+  96:['psychic',null],97:['psychic',null],
+  98:['water',null],99:['water',null],
+  100:['electric',null],101:['electric',null],
+  102:['grass','psychic'],103:['grass','psychic'],
+  104:['ground',null],105:['ground',null],
+  106:['fighting',null],107:['fighting',null],
+  108:['normal',null],
+  109:['poison',null],110:['poison',null],
+  111:['ground','rock'],112:['ground','rock'],
+  113:['normal',null],114:['grass',null],115:['normal',null],
+  116:['water',null],117:['water',null],
+  118:['water',null],119:['water',null],
+  120:['water',null],121:['water','psychic'],
+  122:['psychic','ice'],
+  123:['bug','flying'],
+  124:['ice','psychic'],
+  125:['electric',null],126:['fire',null],
+  127:['bug',null],128:['normal',null],
+  129:['water',null],130:['water','flying'],
+  131:['water','ice'],132:['normal',null],133:['normal',null],
+  134:['water',null],135:['electric',null],136:['fire',null],
+  137:['normal',null],
+  138:['rock','water'],139:['rock','water'],
+  140:['rock','water'],141:['rock','water'],
+  142:['rock','flying'],143:['normal',null],
+  144:['ice','flying'],145:['electric','flying'],146:['fire','flying'],
+  147:['dragon',null],148:['dragon',null],149:['dragon','flying'],
+  150:['psychic',null],151:['psychic',null],
+  152:['grass',null],153:['grass',null],154:['grass',null],
+  155:['fire',null],156:['fire',null],157:['fire',null],
+  158:['water',null],159:['water',null],160:['water',null],
+  161:['normal',null],162:['normal',null],
+  163:['normal','flying'],164:['normal','flying'],
+  165:['bug','flying'],166:['bug','flying'],
+  167:['bug','poison'],168:['bug','poison'],
+  169:['poison','flying'],
+  170:['water','electric'],171:['water','electric'],
+  172:['electric',null],173:['normal',null],174:['normal',null],
+  175:['normal',null],176:['normal','flying'],
+  177:['psychic','flying'],178:['psychic','flying'],
+  179:['electric',null],180:['electric',null],181:['electric',null],
+  182:['grass',null],
+  183:['water',null],184:['water',null],
+  185:['rock',null],186:['water',null],
+  187:['grass','flying'],188:['grass','flying'],189:['grass','flying'],
+  190:['normal',null],191:['grass',null],192:['grass',null],
+  193:['bug','flying'],
+  194:['water','ground'],195:['water','ground'],
+  196:['psychic',null],197:['dark',null],
+  198:['dark','flying'],199:['water','psychic'],
+  200:['ghost',null],201:['psychic',null],202:['psychic',null],
+  203:['normal','psychic'],
+  204:['bug',null],205:['bug','steel'],
+  206:['normal',null],207:['ground','flying'],208:['steel','ground'],
+  209:['normal',null],210:['normal',null],
+  211:['water','poison'],212:['bug','steel'],
+  213:['bug','rock'],214:['bug','fighting'],
+  215:['dark','ice'],216:['normal',null],217:['normal',null],
+  218:['fire',null],219:['fire','rock'],
+  220:['ice','ground'],221:['ice','ground'],
+  222:['water','rock'],
+  223:['water',null],224:['water',null],
+  225:['ice','flying'],226:['water','flying'],
+  227:['steel','flying'],
+  228:['dark','fire'],229:['dark','fire'],
+  230:['water','dragon'],
+  231:['ground',null],232:['ground',null],
+  233:['normal',null],234:['normal',null],235:['normal',null],
+  236:['fighting',null],237:['fighting',null],
+  238:['ice','psychic'],239:['electric',null],240:['fire',null],
+  241:['normal',null],242:['normal',null],
+  243:['electric',null],244:['fire',null],245:['water',null],
+  246:['rock','ground'],247:['rock','ground'],248:['rock','dark'],
+  249:['psychic','flying'],250:['fire','flying'],251:['psychic',null],
+  252:['grass',null],253:['grass',null],254:['grass',null],
+  255:['fire',null],256:['fire','fighting'],257:['fire','fighting'],
+  258:['water',null],259:['water','ground'],260:['water','ground'],
+  261:['dark',null],262:['dark',null],
+  263:['normal',null],264:['normal',null],
+  265:['bug',null],266:['bug',null],267:['bug','flying'],
+  268:['bug',null],269:['bug','poison'],
+  270:['water','grass'],271:['water','grass'],272:['water','grass'],
+  273:['grass',null],274:['grass','dark'],275:['grass','dark'],
+  276:['normal','flying'],277:['normal','flying'],
+  278:['water','flying'],279:['water','flying'],
+  280:['psychic',null],281:['psychic',null],282:['psychic',null],
+  283:['bug','water'],284:['bug','flying'],
+  285:['grass',null],286:['grass','fighting'],
+  287:['normal',null],288:['normal',null],289:['normal',null],
+  290:['bug','ground'],291:['bug','flying'],292:['bug','ghost'],
+  293:['normal',null],294:['normal',null],295:['normal',null],
+  296:['fighting',null],297:['fighting',null],
+  298:['normal',null],299:['rock',null],
+  300:['normal',null],301:['normal',null],
+  302:['dark','ghost'],303:['steel','fairy'],
+  304:['steel','rock'],305:['steel','rock'],306:['steel','rock'],
+  307:['fighting','psychic'],308:['fighting','psychic'],
+  309:['electric',null],310:['electric',null],
+  311:['electric',null],312:['electric',null],
+  313:['bug',null],314:['bug',null],
+  315:['grass','poison'],
+  316:['poison',null],317:['poison',null],
+  318:['water','dark'],319:['water','dark'],
+  320:['water',null],321:['water',null],
+  322:['fire',null],323:['fire','ground'],
+  324:['fire',null],
+  325:['psychic',null],326:['psychic',null],
+  327:['normal',null],
+  328:['ground',null],329:['ground','dragon'],330:['ground','dragon'],
+  331:['grass',null],332:['grass','dark'],
+  333:['normal','flying'],334:['dragon','flying'],
+  335:['normal',null],336:['poison',null],
+  337:['rock','psychic'],338:['rock','psychic'],
+  339:['water','ground'],340:['water','ground'],
+  341:['water',null],342:['water','dark'],
+  343:['ground','psychic'],344:['ground','psychic'],
+  345:['rock','grass'],346:['rock','grass'],
+  347:['rock','bug'],348:['rock','bug'],
+  349:['water',null],350:['water',null],
+  351:['normal',null],352:['normal',null],
+  353:['ghost',null],354:['ghost',null],
+  355:['ghost',null],356:['ghost',null],
+  357:['grass',null],358:['psychic',null],
+  359:['dark',null],360:['psychic',null],
+  361:['ice',null],362:['ice',null],
+  363:['ice','water'],364:['ice','water'],365:['ice','water'],
+  366:['water',null],367:['water','dark'],368:['water','psychic'],
+  369:['water','rock'],370:['water',null],
+  371:['dragon',null],372:['dragon',null],373:['dragon','flying'],
+  374:['steel','psychic'],375:['steel','psychic'],376:['steel','psychic'],
+  377:['rock',null],378:['ice',null],379:['steel',null],
+  380:['dragon','psychic'],381:['dragon','psychic'],
+  382:['water',null],383:['ground',null],384:['dragon','flying'],
+  385:['steel','psychic'],386:['psychic',null]
+};
+
+// Faded type background colors (muted, dark-theme friendly)
+const TYPE_COLORS = {
+  normal:  'rgba(168,168,120,.18)',
+  fire:    'rgba(240,128,48,.2)',
+  water:   'rgba(104,144,240,.2)',
+  grass:   'rgba(120,200,80,.18)',
+  electric:'rgba(248,208,48,.18)',
+  ice:     'rgba(152,216,216,.18)',
+  fighting:'rgba(192,48,40,.2)',
+  poison:  'rgba(160,64,160,.2)',
+  ground:  'rgba(224,192,104,.18)',
+  flying:  'rgba(168,144,240,.18)',
+  psychic: 'rgba(248,88,136,.2)',
+  bug:     'rgba(168,184,32,.18)',
+  rock:    'rgba(184,160,56,.18)',
+  ghost:   'rgba(112,88,152,.22)',
+  dragon:  'rgba(112,56,248,.2)',
+  dark:    'rgba(112,88,72,.22)',
+  steel:   'rgba(184,184,208,.18)',
+  fairy:   'rgba(240,182,188,.18)',
+};
+
+const BADGES      = ["🪨","🌊","⚡","🌈","🔴","🌊","🔥","🌿"];
+const BADGE_NAMES = ["Boulder","Cascade","Thunder","Rainbow","Soul","Marsh","Volcano","Earth"];
+const AVATARS     = ["🔴","🔵","🟢","🟡","🟣","🟠","🩷","⬛"];
+
+/* ──────────────────────────────
+   STATE
+────────────────────────────── */
+const S = {
+  runId:       null,
+  runData:     null,
+  player:      null,   // currently selected player name
+  pendingPlayer: null, // selected but not confirmed
+  draftPicks:  {},     // { recipientName: [dex,dex,dex] }
+  filteredPokemon: POKEMON,
+  currentRecipient: null,
+  unsub:       null,
+  // reveal
+  rvPickerIdx:       0,
+  rvCurrentRecipient: null,
+  rvRevealedPlayers:  [],
+};
+
+/* ──────────────────────────────
+   HELPERS
+────────────────────────────── */
+function sprite(dex){ return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${dex}.png`; }
+function dexStr(dex){ return '#' + String(dex).padStart(3,'0'); }
+
+function toast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(()=> t.className = '', 3000);
+}
+
+function modal(title, body, actions){
+  document.getElementById('m-title').textContent = title;
+  document.getElementById('m-body').textContent  = body;
+  const el = document.getElementById('m-actions');
+  el.innerHTML = '';
+  actions.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn btn-sm ' + (a.primary ? 'btn-red' : 'btn-ghost');
+    b.textContent = a.label;
+    b.onclick = () => { closeModal(); a.fn(); };
+    el.appendChild(b);
+  });
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-bg').classList.remove('open'); }
+document.getElementById('modal-bg').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+function hideLoading(){
+  const l = document.getElementById('loading');
+  l.style.transition = 'opacity .4s'; l.style.opacity = '0';
+  setTimeout(()=> l.style.display='none', 420);
+}
+
+function showSetup(){
+  document.getElementById('pg-setup').style.display = 'flex';
+  document.getElementById('app-shell').classList.remove('visible');
+}
+function showApp(){
+  document.getElementById('pg-setup').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+}
+
+function showTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+
+  if(name==='summary') renderSummary();
+  if(name==='picks')   renderPicksTab();
+  if(name==='select')  renderSelectTab();
+  if(name==='reveal')  renderRevealIdle();
+}
+
+function updateSidebar(){
+  const rd = S.runData;
+  if(!rd) return;
+  document.getElementById('sb-run-id').textContent = 'ID: ' + rd.runId;
+  document.getElementById('sb-player-name').textContent = S.player || '—';
+}
+
+function copyRunId(){
+  navigator.clipboard.writeText(S.runId||'').then(()=> toast('Run ID copied!','t-ok'));
+}
+
+/* ──────────────────────────────
+   SETUP
+────────────────────────────── */
+let pendingParticipants = [];
+
+function addParticipant(){
+  const inp = document.getElementById('inp-pname');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(pendingParticipants.includes(name)){ toast('Name already added','t-err'); return; }
+  if(pendingParticipants.length>=8){ toast('Max 8 players','t-err'); return; }
+  pendingParticipants.push(name);
+  renderPList(); inp.value=''; inp.focus();
+}
+document.getElementById('inp-pname').addEventListener('keydown', e=>{ if(e.key==='Enter') addParticipant(); });
+
+function removeParticipant(name){
+  pendingParticipants = pendingParticipants.filter(p=>p!==name);
+  renderPList();
+}
+
+function renderPList(){
+  const ul = document.getElementById('p-list'); ul.innerHTML='';
+  pendingParticipants.forEach((name,i)=>{
+    const li = document.createElement('li'); li.className='p-item';
+    li.innerHTML = `<span>${AVATARS[i]} ${name}${i===0?' <span style="color:var(--gold);font-size:11px">(host)</span>':''}</span>
+      <button class="p-remove" onclick="removeParticipant('${name.replace(/'/g,"\\'")}')">×</button>`;
+    ul.appendChild(li);
+  });
+}
+
+async function createRun(){
+  const runName = document.getElementById('inp-run-name').value.trim() || 'Nuzlocke Run';
+  if(pendingParticipants.length<2){ toast('Add at least 2 players','t-err'); return; }
+  const runId = Math.random().toString(36).substr(2,6).toUpperCase();
+  const participants = pendingParticipants.map((name,i)=>({
+    name, avatar:AVATARS[i], badges:0, submitted:false
+  }));
+  const runData = {
+    runId, runName, participants, phase:'picking',
+    picks:{}, deaths:{}, createdAt:Date.now()
+  };
+  try{
+    await setDoc(doc(db,'runs',runId), runData);
+    S.runId = runId; S.runData = runData;
+    localStorage.setItem('lastRunId', runId);
+    navigator.clipboard.writeText(runId).catch(()=>{});
+    toast(`Run created! ID: ${runId} (copied to clipboard)`,'t-ok');
+    enterApp();
+  } catch(e){ toast('Error: '+e.message,'t-err'); console.error(e); }
+}
+
+async function joinRun(){
+  const code = document.getElementById('inp-join').value.trim().toUpperCase();
+  if(!code){ toast('Enter a Run ID','t-err'); return; }
+  try{
+    const snap = await getDoc(doc(db,'runs',code));
+    if(!snap.exists()){ toast('Run not found','t-err'); return; }
+    S.runId = code; S.runData = snap.data();
+    localStorage.setItem('lastRunId', code);
+    enterApp();
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+function enterApp(){
+  showApp();
+  updateSidebar();
+  subscribeToRun();
+  showTab('select');
+}
+
+function goToSetup(){
+  if(S.unsub){ S.unsub(); S.unsub=null; }
+  S.player=null; S.runId=null; S.runData=null;
+  localStorage.removeItem('lastRunId');
+  showSetup();
+}
+
+/* ──────────────────────────────
+   LIVE SUBSCRIPTION
+────────────────────────────── */
+function subscribeToRun(){
+  if(S.unsub) S.unsub();
+  S.unsub = onSnapshot(doc(db,'runs',S.runId), snap=>{
+    if(!snap.exists()) return;
+    S.runData = snap.data();
+    updateSidebar();
+    // refresh active tab quietly
+    const active = document.querySelector('.tab-panel.active');
+    if(active){
+      const id = active.id.replace('tab-','');
+      if(id==='summary') renderSummary();
+      if(id==='select')  renderSelectTab();
+    }
+  });
+}
+
+/* ──────────────────────────────
+   SELECT PLAYER TAB
+────────────────────────────── */
+function renderSelectTab(){
+  const rd = S.runData; if(!rd) return;
+  document.getElementById('sel-run-label').textContent = rd.runName + ' · Run ID: ' + rd.runId;
+
+  const grid = document.getElementById('player-grid'); grid.innerHTML='';
+  rd.participants.forEach(p=>{
+    const picks = (rd.picks||{})[p.name]||{};
+    const doneCount = rd.participants.filter(r=>(picks[r.name]||[]).length===3).length;
+    const card = document.createElement('div');
+    const allDone = doneCount===rd.participants.length;
+    card.className = 'player-card'+(allDone?' done':'')+(S.pendingPlayer===p.name?' selected-card':'');
+    card.innerHTML = `<span class="pc-avatar">${p.avatar}</span>
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-status">${doneCount===rd.participants.length?'✓ All picks done':(doneCount>0?`${doneCount}/${rd.participants.length} recipients done`:'Not started')}</div>`;
+    card.onclick = ()=> selectPending(p.name);
+    grid.appendChild(card);
+  });
+
+  const bar = document.getElementById('confirm-bar');
+  if(S.pendingPlayer){
+    bar.classList.add('show');
+    document.getElementById('confirm-name').textContent = S.pendingPlayer;
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function selectPending(name){
+  S.pendingPlayer = name;
+  renderSelectTab();
+}
+
+function confirmPlayer(){
+  if(!S.pendingPlayer) return;
+  S.player = S.pendingPlayer;
+  S.pendingPlayer = null;
+  updateSidebar();
+  // Init draft picks from any saved data
+  const rd = S.runData;
+  const saved = (rd.picks||{})[S.player]||{};
+  S.draftPicks = {};
+  rd.participants.forEach(p=>{
+    S.draftPicks[p.name] = [...(saved[p.name]||[])];
+  });
+  S.currentRecipient = rd.participants[0].name;
+  showTab('picks');
+}
+
+/* ──────────────────────────────
+   PICKS TAB
+────────────────────────────── */
+function renderPicksTab(){
+  const rd = S.runData; if(!rd) return;
+
+  if(!S.player){
+    toast('Select a player first','t-err');
+    showTab('select'); return;
+  }
+
+  document.getElementById('picking-as-label').textContent = 'PICKING AS: '+S.player;
+  document.getElementById('picking-ui').style.display='block';
+  setAutosaveStatus('saved');
+
+  renderRTabs();
+  renderPickingPanel();
+  renderPokeGrid();
+}
+
+function setAutosaveStatus(status){
+  const el = document.getElementById('autosave-indicator');
+  if(!el) return;
+  if(status==='saving'){ el.textContent='Saving…'; el.style.color='var(--gold)'; }
+  else if(status==='saved'){ el.textContent='✓ Saved'; el.style.color='var(--green)'; }
+  else if(status==='error'){ el.textContent='Save failed'; el.style.color='var(--red)'; }
+}
+
+function renderRTabs(){
+  const rd = S.runData;
+  const el = document.getElementById('r-tabs'); el.innerHTML='';
+  rd.participants.forEach(p=>{
+    const picks = S.draftPicks[p.name]||[];
+    const done = picks.length===3;
+    const tab = document.createElement('div');
+    tab.className = 'r-tab'+(p.name===S.currentRecipient?' active':'')+(done?' r-done':'');
+    tab.textContent = (done?'✓ ':'')+p.name+(p.name===S.player?' (you)':'');
+    tab.onclick = ()=>{ S.currentRecipient=p.name; renderRTabs(); renderPickingPanel(); };
+    el.appendChild(tab);
+  });
+}
+
+function renderPickingPanel(){
+  const r = S.currentRecipient;
+  const isSelf = r===S.player;
+  document.getElementById('picking-for-label').textContent = 'FOR: '+r;
+  document.getElementById('picking-self-note').textContent = isSelf?'(your own team!)':'';
+  renderSelPicks();
+}
+
+function renderSelPicks(){
+  const r = S.currentRecipient;
+  const picks = S.draftPicks[r]||[];
+  const el = document.getElementById('sel-picks'); el.innerHTML='';
+  for(let i=0;i<3;i++){
+    const slot = document.createElement('div'); slot.className='pick-slot';
+    if(picks[i]){
+      const dex=picks[i]; const poke=POKEMON.find(p=>p[0]===dex);
+      slot.innerHTML=`<div class="ps-num">Pick ${i+1}</div>
+        <img src="${sprite(dex)}" alt="${poke[1]}"/>
+        <div class="ps-name">${dexStr(dex)} ${poke[1]}</div>
+        <button class="ps-rm" onclick="removePick('${r}',${i})">✕ Remove</button>`;
+    } else {
+      slot.classList.add('empty');
+      slot.innerHTML=`<div class="ps-num">Pick ${i+1}</div><div class="empty-box">?</div>`;
+    }
+    el.appendChild(slot);
+  }
+  renderPokeGrid();
+}
+
+function renderPokeGrid(){
+  const r = S.currentRecipient;
+  const curPicks = S.draftPicks[r]||[];
+  const allUsed = [];
+  Object.entries(S.draftPicks).forEach(([rname,arr])=>{ if(rname!==r) arr.forEach(d=>allUsed.push(d)); });
+
+  const grid = document.getElementById('poke-grid'); grid.innerHTML='';
+  S.filteredPokemon.forEach(([dex,name])=>{
+    const isSel = curPicks.includes(dex);
+    const isUsed= !isSel && allUsed.includes(dex);
+    const card = document.createElement('div');
+    card.className='pk-card'+(isSel?' pk-sel':'')+(isUsed?' pk-used':'');
+    card.innerHTML=`<div class="pk-dex">${dexStr(dex)}</div>
+      <img src="${sprite(dex)}" alt="${name}" loading="lazy"/>
+      <div class="pk-name">${name}</div>`;
+    if(!isUsed) card.onclick=()=>pickPokemon(dex);
+    grid.appendChild(card);
+  });
+}
+
+function pickPokemon(dex){
+  const r = S.currentRecipient;
+  if(!S.draftPicks[r]) S.draftPicks[r]=[];
+  const picks = S.draftPicks[r];
+  if(picks.includes(dex)){
+    S.draftPicks[r]=picks.filter(d=>d!==dex);
+  } else {
+    if(picks.length>=3){ toast('Already picked 3 for this player!','t-err'); return; }
+    S.draftPicks[r].push(dex);
+  }
+  renderRTabs(); renderSelPicks();
+  autoSave();
+}
+
+function removePick(recipient, index){
+  S.draftPicks[recipient].splice(index,1);
+  renderRTabs(); renderSelPicks();
+  autoSave();
+}
+
+function filterPokemon(){
+  const q = document.getElementById('poke-search').value.trim().toLowerCase();
+  S.filteredPokemon = q
+    ? POKEMON.filter(([dex,name])=> name.toLowerCase().includes(q)||String(dex).includes(q))
+    : POKEMON;
+  renderPokeGrid();
+}
+
+let autoSaveTimer = null;
+async function autoSave(){
+  if(!S.player) return;
+  setAutosaveStatus('saving');
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async ()=>{
+    try{
+      await updateDoc(doc(db,'runs',S.runId),{ [`picks.${S.player}`]: S.draftPicks });
+      setAutosaveStatus('saved');
+    } catch(e){
+      setAutosaveStatus('error');
+      console.error('Autosave failed:',e);
+    }
+  }, 800);
+}
+
+/* ──────────────────────────────
+   SUMMARY TAB
+────────────────────────────── */
+function renderSummary(){
+  const rd = S.runData; if(!rd) return;
+  document.getElementById('summary-run-name').textContent = rd.runName;
+  const phaseEl = document.getElementById('summary-phase-chip');
+  const phaseClass = rd.phase==='picking'?'ph-picking':rd.phase==='playing'?'ph-playing':'ph-reveal';
+  const phaseLabel = rd.phase==='picking'?'Picking Phase':rd.phase==='playing'?'Play Phase':'Reveal Night';
+  phaseEl.innerHTML = `<span class="phase-chip ${phaseClass}">${phaseLabel}</span>`;
+
+  const content = document.getElementById('summary-content'); content.innerHTML='';
+  const picks     = rd.picks||{};
+  const deaths    = rd.deaths||{};
+  const badgesMap = rd.badges||{};
+  const nicknames = rd.nicknames||{};
+  const ps        = rd.participants;
+
+  const wrap  = document.createElement('div'); wrap.className='matrix-wrap';
+  const table = document.createElement('table'); table.className='matrix-table';
+
+  // ── HEADER ROW ──
+  const thead = document.createElement('thead');
+  const hrow  = document.createElement('tr');
+
+  const corner = document.createElement('th'); corner.className='matrix-corner';
+  corner.innerHTML='<div class="matrix-corner-label">Picker ↓<br>→</div>';
+  hrow.appendChild(corner);
+
+  ps.forEach((recipient, ri)=>{
+    const badges = badgesMap[recipient.name]||0;
+    let badgeHtml='';
+    for(let b=0;b<8;b++){
+      const earned = b<badges;
+      badgeHtml+=`<span class="badge-ico ${earned?'earned':''}" title="${BADGE_NAMES[b]}" onclick="toggleBadge('${recipient.name}',${ri},${b})"><img src="./badges/${b+1}.png" alt="${BADGE_NAMES[b]}"/></span>`;
+    }
+    const th = document.createElement('th'); th.className='matrix-col-header';
+    th.innerHTML=`<span class="mch-avatar">${recipient.avatar}</span>
+      <span class="mch-name">${recipient.name}</span>
+      <div class="mch-badges">${badgeHtml}</div>`;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  // ── BODY ROWS ──
+  const tbody = document.createElement('tbody');
+  ps.forEach(picker=>{
+    const tr = document.createElement('tr');
+
+    const rh = document.createElement('td'); rh.className='matrix-row-header';
+    rh.innerHTML=`<div class="mrh-inner"><span class="mrh-avatar">${picker.avatar}</span><span class="mrh-name">${picker.name}</span></div>`;
+    tr.appendChild(rh);
+
+    ps.forEach(recipient=>{
+      const isSelf = picker.name===recipient.name;
+      const td = document.createElement('td');
+      td.className='matrix-cell'+(isSelf?' mc-self':'');
+
+      const pickerPicks = (picks[picker.name]||{})[recipient.name]||[];
+      const isHidden = rd.phase==='picking'
+        && S.player===recipient.name
+        && picker.name!==S.player;
+
+      const cellRow = document.createElement('div'); cellRow.className='cell-picks';
+
+      if(isHidden){
+        for(let i=0;i<3;i++){
+          const card=document.createElement('div'); card.className='m-poke mp-hidden';
+          card.innerHTML=`<div class="mp-hidden-inner">❓</div>`;
+          cellRow.appendChild(card);
+        }
+      } else if(pickerPicks.length===0){
+        const e=document.createElement('div'); e.className='mp-empty';
+        e.textContent='—';
+        cellRow.appendChild(e);
+      } else {
+        pickerPicks.forEach(dex=>{
+          const poke=POKEMON.find(p=>p[0]===dex); if(!poke) return;
+          const key=`${picker.name}__${recipient.name}__${dex}`;
+          const dd = deaths[key]||{dead:false};
+          const nickKey = `${recipient.name}__${dex}`;
+          const nickname = nicknames[nickKey]||'';
+
+          const types = POKE_TYPES[dex]||['normal',null];
+          const c1 = TYPE_COLORS[types[0]]||'rgba(168,168,120,.18)';
+          const c2 = types[1] ? TYPE_COLORS[types[1]] : null;
+          const typeColor = c2
+            ? `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`
+            : c1;
+          const card=document.createElement('div');
+          card.className='m-poke'+(dd.dead?' mp-dead':'');
+          if(!dd.dead) card.style.background = typeColor;
+
+          // Build card DOM manually so we can attach event listeners
+          const deadBtn = document.createElement('button');
+          deadBtn.className='mp-dead-btn';
+          deadBtn.title = dd.dead?'Mark Alive':'Mark Dead';
+          const deadIcon = document.createElement('span');
+          deadIcon.className='dead-icon';
+          deadIcon.textContent = dd.dead?'💀':'❤️';
+          deadBtn.appendChild(deadIcon);
+          deadBtn.onclick = async ()=>{
+            const isNowDead = !((S.runData.deaths||{})[key]||{dead:false}).dead;
+            card.classList.toggle('mp-dead', isNowDead);
+            deadIcon.textContent = isNowDead?'💀':'❤️';
+            deadBtn.title = isNowDead?'Mark Alive':'Mark Dead';
+            img.style.filter = isNowDead?'grayscale(1)':'';
+            card.style.background = isNowDead ? '' : typeColor;
+            await toggleDead(key);
+          };
+
+          const img = document.createElement('img');
+          img.src = sprite(dex);
+          img.alt = poke[1];
+          img.loading = 'lazy';
+          img.width = 80; img.height = 80;
+
+          const nicknameInput = document.createElement('input');
+          nicknameInput.type = 'text';
+          nicknameInput.className = 'mp-nickname';
+          nicknameInput.value = nickname || poke[1];
+          nicknameInput.maxLength = 12;
+          nicknameInput.title = 'Click to nickname';
+          nicknameInput.addEventListener('change', e=>{
+            saveNickname(nickKey, e.target.value.trim()||poke[1]);
+          });
+          nicknameInput.addEventListener('focus', e=> e.target.select());
+
+
+          const realName = document.createElement('span');
+          realName.className = 'mp-realname';
+          // Only show real name if there's a custom nickname
+          realName.textContent = (nickname && nickname!==poke[1]) ? poke[1] : '';
+
+          card.appendChild(deadBtn);
+          card.appendChild(img);
+          card.appendChild(nicknameInput);
+          card.appendChild(realName);
+          cellRow.appendChild(card);
+        });
+      }
+
+      td.appendChild(cellRow);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  content.appendChild(wrap);
+}
+
+async function saveNickname(nickKey, value){
+  try{
+    await updateDoc(doc(db,'runs',S.runId),{ [`nicknames.${nickKey}`]: value });
+  } catch(e){ toast('Error saving nickname','t-err'); }
+}
+
+async function toggleBadge(playerName, playerIdx, badgeIdx){
+  const rd=S.runData;
+  // Store badges in a flat map: badges.PlayerName = count
+  // This avoids Firestore's array index dot-notation issue
+  const badgesMap = rd.badges || {};
+  const cur = badgesMap[playerName] || 0;
+  const newVal = badgeIdx < cur ? badgeIdx : badgeIdx + 1;
+  try{
+    await updateDoc(doc(db,'runs',S.runId),{ [`badges.${playerName}`]: newVal });
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+async function toggleDead(key){
+  const rd=S.runData;
+  const cur=(rd.deaths||{})[key]||{dead:false};
+  try{
+    await updateDoc(doc(db,'runs',S.runId),{ [`deaths.${key}`]:{dead:!cur.dead} });
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+
+
+/* ──────────────────────────────
+   REVEAL NIGHT TAB
+────────────────────────────── */
+function renderRevealIdle(){
+  const rd=S.runData; if(!rd) return;
+  const allHavePicks = rd.participants.every(p=>{
+    const picks = (rd.picks||{})[p.name]||{};
+    return rd.participants.every(r=>(picks[r.name]||[]).length===3);
+  });
+  document.getElementById('reveal-submit-warning').style.display = allHavePicks?'none':'block';
+
+  // Build player selection grid
+  const grid = document.getElementById('reveal-player-pick'); grid.innerHTML='';
+  rd.participants.forEach(p=>{
+    const revealed = (S.rvRevealedPlayers||[]).includes(p.name);
+    const card = document.createElement('div');
+    card.className = 'player-card' + (revealed?' done':'');
+    card.innerHTML=`<span class="pc-avatar">${p.avatar}</span>
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-status">${revealed?'✓ Revealed':'Not yet revealed'}</div>`;
+    card.onclick = ()=> startRevealForPlayer(p.name);
+    grid.appendChild(card);
+  });
+
+  showRevealIdle();
+}
+
+function showRevealIdle(){
+  document.getElementById('reveal-idle').classList.remove('hidden');
+  document.getElementById('reveal-stage').classList.add('hidden');
+}
+
+function startRevealForPlayer(recipientName){
+  const rd = S.runData;
+  S.rvCurrentRecipient = recipientName;
+  S.rvPickerIdx = 0; // which picker's 3 picks we're currently showing
+
+  document.getElementById('reveal-idle').classList.add('hidden');
+  document.getElementById('reveal-stage').classList.remove('hidden');
+  document.getElementById('rv-all-rows').innerHTML=''; // clear accumulated rows
+
+  const recipient = rd.participants.find(p=>p.name===recipientName);
+  document.getElementById('rv-ctx').textContent  = "Revealing team for:";
+  document.getElementById('rv-who').textContent  = recipientName.toUpperCase();
+
+  renderRevealStep();
+}
+
+function renderRevealStep(){
+  const rd = S.runData;
+  const pickers = rd.participants;
+  const picker = pickers[S.rvPickerIdx];
+  if(!picker){ finishPlayerReveal(); return; }
+
+  const total = pickers.length;
+  document.getElementById('rv-prog').textContent =
+    `${picker.name}'s picks — ${S.rvPickerIdx+1} of ${total} pickers`;
+  document.getElementById('rv-count').textContent = `${S.rvPickerIdx+1} / ${total}`;
+
+  const isLast = S.rvPickerIdx === total-1;
+  document.getElementById('rv-next').textContent = isLast ? 'Finish Team ✓' : 'Next →';
+
+  const picksForRecip = ((rd.picks||{})[picker.name]||{})[S.rvCurrentRecipient]||[];
+  const row = document.getElementById('rv-row'); row.innerHTML='';
+
+  // Label above the 3 cards
+  const label = document.createElement('div');
+  label.style.cssText='font-family:var(--font-px);font-size:7px;color:var(--text2);margin-bottom:8px;text-align:center;';
+  label.textContent = `Picked by ${picker.name}`;
+  row.appendChild(label);
+
+  const cardsRow = document.createElement('div');
+  cardsRow.style.cssText='display:flex;justify-content:center;gap:20px;flex-wrap:wrap;';
+  row.appendChild(cardsRow);
+
+  for(let i=0;i<3;i++){
+    const card = document.createElement('div');
+    card.className='rv-card';
+    if(picksForRecip[i]){
+      const dex=picksForRecip[i];
+      const poke=POKEMON.find(p=>p[0]===dex)||[dex,'Unknown'];
+      card.innerHTML=`<div class="rv-mystery">❓</div><div class="rv-num" style="opacity:0">…</div><div class="rv-name" style="opacity:0">…</div>`;
+      cardsRow.appendChild(card);
+      setTimeout(()=>{
+        card.innerHTML=`<img src="${sprite(dex)}" alt="${poke[1]}"/><div class="rv-num">${dexStr(dex)}</div><div class="rv-name">${poke[1]}</div>`;
+        card.classList.add('rv-revealed');
+      },(i+1)*750);
+    } else {
+      card.innerHTML=`<div class="rv-mystery" style="opacity:.25">—</div><div class="rv-name" style="color:var(--muted)">No pick</div>`;
+      cardsRow.appendChild(card);
+    }
+  }
+}
+
+function revealNext(){
+  // Move current row into the "revealed so far" accumulator
+  const currentRow = document.getElementById('rv-row');
+  const allRows = document.getElementById('rv-all-rows');
+  const clone = currentRow.cloneNode(true);
+  clone.style.cssText='margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px;';
+  allRows.appendChild(clone);
+  currentRow.innerHTML='';
+
+  S.rvPickerIdx++;
+  const rd=S.runData;
+  if(S.rvPickerIdx >= rd.participants.length){
+    finishPlayerReveal();
+  } else {
+    renderRevealStep();
+  }
+}
+
+function finishPlayerReveal(){
+  // Mark this player as revealed
+  if(!S.rvRevealedPlayers) S.rvRevealedPlayers=[];
+  if(!S.rvRevealedPlayers.includes(S.rvCurrentRecipient)){
+    S.rvRevealedPlayers.push(S.rvCurrentRecipient);
+  }
+  const rd=S.runData;
+  const allDone = rd.participants.every(p=> S.rvRevealedPlayers.includes(p.name));
+  if(allDone){
+    modal('All Teams Revealed! 🎉','Everyone has been revealed. Start the run?',
+      [{label:'Stay Here',fn:()=>showRevealIdle()},{label:'Start Playing!',primary:true,fn:finishReveal}]);
+  } else {
+    modal(`${S.rvCurrentRecipient}'s team revealed!`,'Who should we reveal next?',
+      [{label:'Choose Next',primary:true,fn:()=>{ showRevealIdle(); renderRevealIdle(); }}]);
+  }
+}
+
+function resetReveal(){
+  S.rvRevealedPlayers=[];
+  S.rvPickerIdx=0;
+  S.rvCurrentRecipient=null;
+  renderRevealIdle();
+}
+
+function exitReveal(){
+  showRevealIdle();
+  showTab('summary');
+}
+
+function confirmRevertPhase(){
+  modal('Revert to Picking Phase?',
+    'This will set the run back to picking phase. All picks will still be saved but the summary will hide them again.',
+    [{label:'Cancel',fn:()=>{}},{label:'Revert',primary:true,fn:revertToPickingPhase}]);
+}
+
+async function revertToPickingPhase(){
+  try{
+    await updateDoc(doc(db,'runs',S.runId),{phase:'picking'});
+    const snap = await getDoc(doc(db,'runs',S.runId));
+    S.runData = snap.data();
+    S.rvRevealedPlayers = [];
+    S.player = null; // force everyone back through Select Player
+    S.pendingPlayer = null;
+    updateSidebar();
+    toast('Reverted to picking phase — please re-select your player','t-ok');
+    showTab('select');
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+async function finishReveal(){
+  try{
+    await updateDoc(doc(db,'runs',S.runId),{phase:'playing'});
+    const snap = await getDoc(doc(db,'runs',S.runId));
+    S.runData = snap.data();
+  } catch(e){ console.error(e); }
+  showRevealIdle();
+  showTab('summary');
+  toast('Reveal complete! All picks are now visible. 🎉','t-ok');
+}
+
+/* ──────────────────────────────
+   INIT
+────────────────────────────── */
+async function init(){
+  const lastId = localStorage.getItem('lastRunId');
+  if(lastId){
+    try{
+      const snap = await getDoc(doc(db,'runs',lastId));
+      if(snap.exists()){
+        S.runId=lastId; S.runData=snap.data();
+        hideLoading(); enterApp(); return;
+      }
+    } catch(e){}
+  }
+  hideLoading();
+  showSetup();
+}
+
+/* expose to inline handlers */
+window.addParticipant   = addParticipant;
+window.removeParticipant= removeParticipant;
+window.createRun        = createRun;
+window.joinRun          = joinRun;
+window.goToSetup        = goToSetup;
+window.showTab          = showTab;
+window.copyRunId        = copyRunId;
+window.selectPending    = selectPending;
+window.confirmPlayer    = confirmPlayer;
+window.filterPokemon    = filterPokemon;
+window.removePick       = removePick;
+window.toggleBadge      = toggleBadge;
+window.toggleDead       = toggleDead;
+window.saveNickname     = saveNickname;
+window.revealNext            = revealNext;
+window.startRevealForPlayer  = startRevealForPlayer;
+window.resetReveal           = resetReveal;
+window.exitReveal            = exitReveal;
+window.confirmRevertPhase    = confirmRevertPhase;
+
+init();
+</script>
+</body>
+</html>
