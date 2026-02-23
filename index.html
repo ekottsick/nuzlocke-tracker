@@ -1354,15 +1354,29 @@ async function joinRun(){
 
 function enterApp(){
   showApp();
+  // Restore last player from localStorage
+  const lastPlayer = localStorage.getItem('lastPlayer');
+  if(lastPlayer && S.runData?.participants?.find(p=>p.name===lastPlayer)){
+    S.player = lastPlayer;
+    const rd = S.runData;
+    const saved = (rd.picks||{})[S.player]||{};
+    S.draftPicks = {};
+    rd.participants.forEach(p=>{
+      S.draftPicks[p.name] = [...(saved[p.name]||[])];
+    });
+    S.currentRecipient = rd.participants[0].name;
+  }
   updateSidebar();
   subscribeToRun();
-  showTab('select');
+  // Default to summary if player known, otherwise select player
+  showTab(S.player ? 'summary' : 'select');
 }
 
 function goToSetup(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
   S.player=null; S.runId=null; S.runData=null;
   localStorage.removeItem('lastRunId');
+  localStorage.removeItem('lastPlayer');
   showSetup();
 }
 
@@ -1424,6 +1438,7 @@ function confirmPlayer(){
   if(!S.pendingPlayer) return;
   S.player = S.pendingPlayer;
   S.pendingPlayer = null;
+  localStorage.setItem('lastPlayer', S.player);
   updateSidebar();
   // Init draft picks from any saved data
   const rd = S.runData;
@@ -1433,7 +1448,7 @@ function confirmPlayer(){
     S.draftPicks[p.name] = [...(saved[p.name]||[])];
   });
   S.currentRecipient = rd.participants[0].name;
-  showTab('picks');
+  showTab('summary');
 }
 
 /* ──────────────────────────────
@@ -1906,11 +1921,22 @@ async function revertToPickingPhase(){
     const snap = await getDoc(doc(db,'runs',S.runId));
     S.runData = snap.data();
     S.rvRevealedPlayers = [];
-    S.player = null; // force everyone back through Select Player
+    // Restore last player and go straight to picks
+    const lastPlayer = localStorage.getItem('lastPlayer');
+    if(lastPlayer && S.runData?.participants?.find(p=>p.name===lastPlayer)){
+      S.player = lastPlayer;
+      const rd = S.runData;
+      const saved = (rd.picks||{})[S.player]||{};
+      S.draftPicks = {};
+      rd.participants.forEach(p=>{ S.draftPicks[p.name] = [...(saved[p.name]||[])]; });
+      S.currentRecipient = rd.participants[0].name;
+    } else {
+      S.player = null;
+    }
     S.pendingPlayer = null;
     updateSidebar();
-    toast('Reverted to picking phase — please re-select your player','t-ok');
-    showTab('select');
+    toast('Reverted to picking phase','t-ok');
+    showTab(S.player ? 'picks' : 'select');
   } catch(e){ toast('Error: '+e.message,'t-err'); }
 }
 
