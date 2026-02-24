@@ -256,6 +256,7 @@ input::placeholder { color:var(--muted); }
 
 /* TAB PANELS */
 .tab-panel { display:none; flex:1; padding:28px; }
+#tab-reveal.active { padding:28px 0; }
 .tab-panel.active { display:block; }
 
 /* ═══════════════════════════════════════
@@ -564,7 +565,7 @@ input::placeholder { color:var(--muted); }
    REVEAL NIGHT TAB
 ═══════════════════════════════════════ */
 #tab-reveal {
-  display:none; /* overridden by .active */
+  display:none;
   flex-direction:column; align-items:center;
   justify-content:flex-start; text-align:center;
 }
@@ -577,7 +578,7 @@ input::placeholder { color:var(--muted); }
 .reveal-idle.hidden { display:none; }
 
 .reveal-stage {
-  width:100%; max-width:680px; margin:0 auto;
+  width:100%;
 }
 .reveal-stage.hidden { display:none; }
 
@@ -591,9 +592,22 @@ input::placeholder { color:var(--muted); }
 
 .reveal-row {
   display:flex; justify-content:center;
-  gap:20px; flex-wrap:wrap;
+  gap:14px; flex-wrap:nowrap; overflow-x:auto;
   margin-bottom:36px; min-height:170px;
 }
+/* scrollbar for reveal rows */
+.rv-cards-row {
+  display:flex; justify-content:center;
+  gap:14px; flex-wrap:nowrap;
+  overflow-x:auto;
+  padding:0 28px 10px;
+  scrollbar-width:thin;
+  scrollbar-color:#555 #000;
+}
+.rv-cards-row::-webkit-scrollbar { height:6px; border-radius:3px; }
+.rv-cards-row::-webkit-scrollbar-track { background:#000; border-radius:3px; }
+.rv-cards-row::-webkit-scrollbar-thumb { background:#555; border-radius:3px; }
+.rv-cards-row::-webkit-scrollbar-thumb:hover { background:#888; }
 
 .rv-card {
   background:var(--surface); border:3px solid var(--border);
@@ -721,6 +735,12 @@ input::placeholder { color:var(--muted); }
       </div>
 
       <div class="field">
+        <label>Picks Per Player (per recipient)</label>
+        <input id="inp-picks-per" type="number" min="1" max="6" value="3" style="width:80px"/>
+        <div class="text-muted mt8">Each player picks this many Pokémon for every other player (including themselves).</div>
+      </div>
+
+      <div class="field">
         <label>Participants</label>
         <ul class="p-list" id="p-list"></ul>
         <div class="row" style="margin-bottom:10px">
@@ -808,7 +828,7 @@ input::placeholder { color:var(--muted); }
       <div class="picks-header">
         <div>
           <div class="px-sub" id="picking-as-label" style="font-size:8px">PICKING AS: —</div>
-          <p class="text-muted mt8" style="font-size:12px">Pick 3 Pokémon for each player</p>
+          <p class="text-muted mt8" style="font-size:12px" id="picks-per-label">Pick 3 Pokémon for each player</p>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span id="autosave-indicator" style="font-size:11px;color:var(--muted);font-style:italic">Auto-saving…</span>
@@ -871,7 +891,7 @@ input::placeholder { color:var(--muted); }
       <!-- Active reveal stage -->
       <div class="reveal-stage hidden" id="reveal-stage">
         <!-- recipient header stays visible throughout -->
-        <div style="text-align:center;margin-bottom:20px">
+        <div style="text-align:center;margin-bottom:20px;padding:0 28px">
           <div class="reveal-ctx" id="rv-ctx"></div>
           <div class="reveal-who" id="rv-who"></div>
           <div class="reveal-prog" id="rv-prog"></div>
@@ -879,12 +899,12 @@ input::placeholder { color:var(--muted); }
         <!-- revealed so far (accumulates as you click Next) -->
         <div id="rv-all-rows"></div>
         <!-- current pending row -->
-        <div class="reveal-row" id="rv-row"></div>
-        <div class="reveal-nav" style="margin-top:24px">
+        <div class="reveal-row" id="rv-row" style="display:none"></div>
+        <div class="reveal-nav" style="margin-top:24px;padding:0 28px">
           <div class="reveal-step-count" id="rv-count"></div>
           <button class="btn btn-gold btn-sm" id="rv-next" onclick="revealNext()">Next →</button>
         </div>
-        <div class="mt20 center">
+        <div class="mt20 center" style="padding:0 28px">
           <button class="btn btn-ghost btn-xs" onclick="exitReveal()">Exit Reveal</button>
         </div>
       </div>
@@ -1326,9 +1346,10 @@ async function createRun(){
   const participants = pendingParticipants.map((name,i)=>({
     name, avatar:AVATARS[i], badges:0, submitted:false
   }));
+  const picksPerPlayer = parseInt(document.getElementById('inp-picks-per').value)||3;
   const runData = {
     runId, runName, participants, phase:'picking',
-    picks:{}, deaths:{}, createdAt:Date.now()
+    picks:{}, deaths:{}, picksPerPlayer, createdAt:Date.now()
   };
   try{
     await setDoc(doc(db,'runs',runId), runData);
@@ -1409,7 +1430,7 @@ function renderSelectTab(){
   const grid = document.getElementById('player-grid'); grid.innerHTML='';
   rd.participants.forEach(p=>{
     const picks = (rd.picks||{})[p.name]||{};
-    const doneCount = rd.participants.filter(r=>(picks[r.name]||[]).length===3).length;
+    const _ppn = rd.picksPerPlayer||3; const doneCount = rd.participants.filter(r=>(picks[r.name]||[]).length===_ppn).length;
     const card = document.createElement('div');
     const allDone = doneCount===rd.participants.length;
     card.className = 'player-card'+(allDone?' done':'')+(S.pendingPlayer===p.name?' selected-card':'');
@@ -1464,6 +1485,9 @@ function renderPicksTab(){
 
   document.getElementById('picking-as-label').textContent = 'PICKING AS: '+S.player;
   document.getElementById('picking-ui').style.display='block';
+  const n = S.runData.picksPerPlayer||3;
+  const lbl = document.getElementById('picks-per-label');
+  if(lbl) lbl.textContent = `Pick ${n} Pokémon for each player`;
   setAutosaveStatus('saved');
 
   renderRTabs();
@@ -1484,7 +1508,7 @@ function renderRTabs(){
   const el = document.getElementById('r-tabs'); el.innerHTML='';
   rd.participants.forEach(p=>{
     const picks = S.draftPicks[p.name]||[];
-    const done = picks.length===3;
+    const n = (S.runData.picksPerPlayer||3); const done = picks.length===n;
     const tab = document.createElement('div');
     tab.className = 'r-tab'+(p.name===S.currentRecipient?' active':'')+(done?' r-done':'');
     tab.textContent = (done?'✓ ':'')+p.name+(p.name===S.player?' (you)':'');
@@ -1505,7 +1529,8 @@ function renderSelPicks(){
   const r = S.currentRecipient;
   const picks = S.draftPicks[r]||[];
   const el = document.getElementById('sel-picks'); el.innerHTML='';
-  for(let i=0;i<3;i++){
+  const n = S.runData.picksPerPlayer||3;
+  for(let i=0;i<n;i++){
     const slot = document.createElement('div'); slot.className='pick-slot';
     if(picks[i]){
       const dex=picks[i]; const poke=POKEMON.find(p=>p[0]===dex);
@@ -1549,7 +1574,8 @@ function pickPokemon(dex){
   if(picks.includes(dex)){
     S.draftPicks[r]=picks.filter(d=>d!==dex);
   } else {
-    if(picks.length>=3){ toast('Already picked 3 for this player!','t-err'); return; }
+    const _n = S.runData.picksPerPlayer||3;
+    if(picks.length>=_n){ toast(`Already picked ${_n} for this player!`,'t-err'); return; }
     S.draftPicks[r].push(dex);
   }
   renderRTabs(); renderSelPicks();
@@ -1653,7 +1679,8 @@ function renderSummary(){
       const cellRow = document.createElement('div'); cellRow.className='cell-picks';
 
       if(isHidden){
-        for(let i=0;i<3;i++){
+        const n = rd.picksPerPlayer||3;
+        for(let i=0;i<n;i++){
           const card=document.createElement('div'); card.className='m-poke mp-hidden';
           card.innerHTML=`<div class="mp-hidden-inner">❓</div>`;
           cellRow.appendChild(card);
@@ -1775,7 +1802,7 @@ function renderRevealIdle(){
   const rd=S.runData; if(!rd) return;
   const allHavePicks = rd.participants.every(p=>{
     const picks = (rd.picks||{})[p.name]||{};
-    return rd.participants.every(r=>(picks[r.name]||[]).length===3);
+    const _p=rd.picksPerPlayer||3; return rd.participants.every(r=>(picks[r.name]||[]).length===_p);
   });
   document.getElementById('reveal-submit-warning').style.display = allHavePicks?'none':'block';
 
@@ -1802,82 +1829,105 @@ function showRevealIdle(){
 
 function startRevealForPlayer(recipientName){
   const rd = S.runData;
+  const n = rd.picksPerPlayer||3;
   S.rvCurrentRecipient = recipientName;
-  S.rvPickerIdx = 0; // which picker's 3 picks we're currently showing
+  S.rvPickerIdx = 0;
 
   document.getElementById('reveal-idle').classList.add('hidden');
   document.getElementById('reveal-stage').classList.remove('hidden');
-  document.getElementById('rv-all-rows').innerHTML=''; // clear accumulated rows
-
-  const recipient = rd.participants.find(p=>p.name===recipientName);
   document.getElementById('rv-ctx').textContent  = "Revealing team for:";
   document.getElementById('rv-who').textContent  = recipientName.toUpperCase();
 
+  // Build the full grid of question marks upfront
+  // Own picks are immediately revealed; everyone else stays hidden
+  const allRows = document.getElementById('rv-all-rows');
+  allRows.innerHTML = '';
+
+  rd.participants.forEach((picker, pi)=>{
+    const isSelf = picker.name === recipientName;
+    const picksForRecip = ((rd.picks||{})[picker.name]||{})[recipientName]||[];
+
+    const row = document.createElement('div');
+    row.id = `rv-placeholder-${pi}`;
+    row.style.cssText='margin-bottom:0;padding-bottom:16px;padding-top:16px;border-bottom:1px solid var(--border);width:100%;';
+
+    const label = document.createElement('div');
+    label.style.cssText='font-family:var(--font-px);font-size:7px;color:var(--text2);margin-bottom:8px;text-align:center;';
+    label.textContent = `Picked by ${picker.name}${isSelf?' (you)':''}`;
+    row.appendChild(label);
+
+    const cardsRow = document.createElement('div');
+    cardsRow.className='rv-cards-row';
+    row.appendChild(cardsRow);
+
+    for(let i=0;i<n;i++){
+      const card = document.createElement('div');
+      card.className='rv-card';
+      card.id=`rv-placeholder-${pi}-${i}`;
+      if(isSelf && picksForRecip[i]){
+        // Own picks: show immediately
+        const dex=picksForRecip[i];
+        const poke=POKEMON.find(p=>p[0]===dex)||[dex,'Unknown'];
+        card.innerHTML=`<img src="${sprite(dex)}" alt="${poke[1]}"/><div class="rv-num">${dexStr(dex)}</div><div class="rv-name">${poke[1]}</div>`;
+        card.classList.add('rv-revealed');
+      } else {
+        card.innerHTML=`<div class="rv-mystery">❓</div>`;
+      }
+      cardsRow.appendChild(card);
+    }
+    allRows.appendChild(row);
+  });
+
+  // Skip own picks row — find first non-self picker
+  const selfIdx = rd.participants.findIndex(p=>p.name===recipientName);
+  // Start from picker 0 but skip self when it comes up
   renderRevealStep();
 }
 
 function renderRevealStep(){
   const rd = S.runData;
+  const n = rd.picksPerPlayer||3;
   const pickers = rd.participants;
+
+  // Skip self — they're already revealed in the placeholder grid
+  while(S.rvPickerIdx < pickers.length && pickers[S.rvPickerIdx].name === S.rvCurrentRecipient){
+    S.rvPickerIdx++;
+  }
   const picker = pickers[S.rvPickerIdx];
   if(!picker){ finishPlayerReveal(); return; }
 
-  const total = pickers.length;
+  const nonSelfTotal = pickers.length - 1;
+  const nonSelfIdx = pickers.slice(0, S.rvPickerIdx+1).filter(p=>p.name!==S.rvCurrentRecipient).length;
   document.getElementById('rv-prog').textContent =
-    `${picker.name}'s picks — ${S.rvPickerIdx+1} of ${total} pickers`;
-  document.getElementById('rv-count').textContent = `${S.rvPickerIdx+1} / ${total}`;
+    `${picker.name}'s picks — ${nonSelfIdx} of ${nonSelfTotal} pickers`;
+  document.getElementById('rv-count').textContent = `${nonSelfIdx} / ${nonSelfTotal}`;
 
-  const isLast = S.rvPickerIdx === total-1;
+  const isLast = nonSelfIdx === nonSelfTotal;
   document.getElementById('rv-next').textContent = isLast ? 'Finish Team ✓' : 'Next →';
 
+  const pickerGlobalIdx = pickers.findIndex(p=>p.name===picker.name);
   const picksForRecip = ((rd.picks||{})[picker.name]||{})[S.rvCurrentRecipient]||[];
-  const row = document.getElementById('rv-row'); row.innerHTML='';
 
-  // Label above the 3 cards
-  const label = document.createElement('div');
-  label.style.cssText='font-family:var(--font-px);font-size:7px;color:var(--text2);margin-bottom:8px;text-align:center;';
-  label.textContent = `Picked by ${picker.name}`;
-  row.appendChild(label);
-
-  const cardsRow = document.createElement('div');
-  cardsRow.style.cssText='display:flex;justify-content:center;gap:20px;flex-wrap:wrap;';
-  row.appendChild(cardsRow);
-
-  for(let i=0;i<3;i++){
-    const card = document.createElement('div');
-    card.className='rv-card';
+  // Animate into the existing placeholder slots for this picker
+  for(let i=0;i<n;i++){
+    const card = document.getElementById(`rv-placeholder-${pickerGlobalIdx}-${i}`);
+    if(!card) continue;
     if(picksForRecip[i]){
       const dex=picksForRecip[i];
       const poke=POKEMON.find(p=>p[0]===dex)||[dex,'Unknown'];
-      card.innerHTML=`<div class="rv-mystery">❓</div><div class="rv-num" style="opacity:0">…</div><div class="rv-name" style="opacity:0">…</div>`;
-      cardsRow.appendChild(card);
       setTimeout(()=>{
         card.innerHTML=`<img src="${sprite(dex)}" alt="${poke[1]}"/><div class="rv-num">${dexStr(dex)}</div><div class="rv-name">${poke[1]}</div>`;
         card.classList.add('rv-revealed');
       },(i+1)*750);
     } else {
-      card.innerHTML=`<div class="rv-mystery" style="opacity:.25">—</div><div class="rv-name" style="color:var(--muted)">No pick</div>`;
-      cardsRow.appendChild(card);
+      card.innerHTML=`<div class="rv-mystery" style="opacity:.25">—</div>`;
     }
   }
 }
 
 function revealNext(){
-  // Move current row into the "revealed so far" accumulator
-  const currentRow = document.getElementById('rv-row');
-  const allRows = document.getElementById('rv-all-rows');
-  const clone = currentRow.cloneNode(true);
-  clone.style.cssText='margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px;';
-  allRows.appendChild(clone);
-  currentRow.innerHTML='';
-
   S.rvPickerIdx++;
-  const rd=S.runData;
-  if(S.rvPickerIdx >= rd.participants.length){
-    finishPlayerReveal();
-  } else {
-    renderRevealStep();
-  }
+  renderRevealStep();
 }
 
 function finishPlayerReveal(){
