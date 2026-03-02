@@ -73,7 +73,7 @@ body::before {
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ═══════════════════════════════════════
-   SETUP PAGE (full screen, no sidebar)
+   SETUP PAGE
 ═══════════════════════════════════════ */
 #pg-setup {
   min-height:100vh;
@@ -175,7 +175,7 @@ input::placeholder { color:var(--muted); }
 .center{text-align:center}
 
 /* ═══════════════════════════════════════
-   APP SHELL (sidebar + main)
+   APP SHELL
 ═══════════════════════════════════════ */
 #app-shell {
   display:none;
@@ -221,6 +221,7 @@ input::placeholder { color:var(--muted); }
   border-left:3px solid transparent;
   transition:all .15s;
   user-select:none;
+  position:relative;
 }
 .nav-item:hover { background:var(--surface2); color:var(--text); }
 .nav-item.active {
@@ -228,10 +229,8 @@ input::placeholder { color:var(--muted); }
   color:var(--red);
   border-left-color:var(--red);
 }
-.nav-item.active.gold-tab {
-  background:rgba(255,209,102,.08);
-  color:var(--gold);
-  border-left-color:var(--gold);
+.nav-item.nav-disabled {
+  opacity:.35; cursor:not-allowed; pointer-events:none;
 }
 .nav-icon { font-size:18px; width:22px; text-align:center; }
 .nav-badge {
@@ -240,6 +239,19 @@ input::placeholder { color:var(--muted); }
   font-size:9px; font-weight:700;
   padding:2px 6px; border-radius:10px;
 }
+
+/* Trade badge — gold yield style */
+.trade-badge {
+  margin-left:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--gold); color:#1a1200;
+  font-family:var(--font-px); font-size:8px; font-weight:700;
+  min-width:20px; height:20px; padding:0 5px;
+  border-radius:4px;
+  box-shadow:0 2px 0 var(--gold-dark);
+  animation:tradepulse 1.6s ease-in-out infinite;
+}
+@keyframes tradepulse{0%,100%{box-shadow:0 2px 0 var(--gold-dark), 0 0 0 0 rgba(255,209,102,.5)}50%{box-shadow:0 2px 0 var(--gold-dark), 0 0 0 5px rgba(255,209,102,0)}}
 
 .sidebar-footer {
   padding:14px 16px;
@@ -376,12 +388,9 @@ input::placeholder { color:var(--muted); }
 .pk-card .pk-name { font-size:10px; font-weight:600; color:var(--text2); }
 .pk-card img { width:96px; height:96px; image-rendering:crisp-edges; image-rendering:pixelated; display:block; margin:0 auto; }
 
-
-
 /* ═══════════════════════════════════════
    SUMMARY TAB
 ═══════════════════════════════════════ */
-/* ── MATRIX LAYOUT ── */
 .matrix-wrap {
   width:100%; overflow-x:auto;
   scrollbar-width:thin; scrollbar-color:var(--border) transparent;
@@ -400,7 +409,6 @@ input::placeholder { color:var(--muted); }
   text-transform:uppercase; letter-spacing:.05em;
   font-weight:600; line-height:1.5;
 }
-/* column header = recipient */
 .matrix-col-header {
   background:var(--surface2); border:1px solid var(--border);
   padding:8px 6px; text-align:center; vertical-align:bottom;
@@ -410,7 +418,6 @@ input::placeholder { color:var(--muted); }
 .mch-name   { font-family:var(--font-px); font-size:7px; color:var(--text); display:block; margin-bottom:6px; }
 .mch-badges { display:flex; gap:2px; justify-content:center; flex-wrap:wrap; }
 
-/* row header = picker */
 .matrix-row-header {
   background:var(--surface2); border:1px solid var(--border);
   padding:0 8px; vertical-align:middle;
@@ -421,7 +428,6 @@ input::placeholder { color:var(--muted); }
 .mrh-avatar img { width:28px; height:28px; image-rendering:pixelated; object-fit:contain; }
 .mrh-name   { font-family:var(--font-px); font-size:6px; color:var(--text2); }
 
-/* cell */
 .matrix-cell {
   border:1px solid var(--border);
   padding:4px; vertical-align:middle;
@@ -430,7 +436,6 @@ input::placeholder { color:var(--muted); }
 .matrix-cell.mc-self { background:rgba(255,209,102,.03); }
 .cell-picks { display:flex; gap:4px; align-items:center; justify-content:center; }
 
-/* poke card: sprite + name stacked, as tall as sprite allows */
 .m-poke {
   background:var(--surface2); border:2px solid var(--border);
   border-radius:6px; padding:3px;
@@ -442,12 +447,23 @@ input::placeholder { color:var(--muted); }
 .m-poke.mp-dead { opacity:.45; border-color:#333; }
 .m-poke.mp-dead img { filter:grayscale(1); }
 .m-poke.mp-hidden { border-style:dashed; background:var(--surface); }
+
+/* Trade indicator on summary card */
+.m-poke.mp-traded {
+  border-color: rgba(76,201,240,.5);
+}
+.mp-trade-icon {
+  position:absolute; bottom:2px; right:3px;
+  font-size:11px; line-height:1;
+  filter:drop-shadow(0 0 4px rgba(76,201,240,.6));
+  pointer-events:none;
+}
+
 .m-poke img {
   width:80px; height:80px;
   image-rendering:crisp-edges; image-rendering:pixelated;
   display:block; margin:0 auto;
 }
-/* nickname: editable inline */
 .mp-nickname {
   font-size:9px; font-weight:600; color:var(--text);
   line-height:1.2; margin-top:2px;
@@ -467,7 +483,7 @@ input::placeholder { color:var(--muted); }
 }
 .mp-dead-btn {
   position:absolute; top:0; left:0; right:0;
-  height:88px; /* covers just the sprite */
+  height:88px;
   background:none; border:none; cursor:pointer;
   padding:3px 4px; border-radius:6px 6px 0 0;
   display:flex; align-items:flex-start; justify-content:flex-end;
@@ -486,7 +502,7 @@ input::placeholder { color:var(--muted); }
 }
 .mp-empty { font-size:11px; color:var(--border); padding:8px; text-align:center; width:100%; }
 
-/* badge icons using real images */
+/* badge icons */
 .badge-ico {
   width:24px; height:24px; border-radius:4px;
   display:inline-flex; align-items:center; justify-content:center;
@@ -598,7 +614,6 @@ input::placeholder { color:var(--muted); }
   gap:14px; flex-wrap:nowrap; overflow-x:auto;
   margin-bottom:36px; min-height:170px;
 }
-/* scrollbar for reveal rows */
 .rv-cards-row {
   display:flex; justify-content:center;
   gap:14px; flex-wrap:nowrap;
@@ -641,6 +656,127 @@ input::placeholder { color:var(--muted); }
 .reveal-step-count { font-family:var(--font-px); font-size:9px; color:var(--text2); padding:0 10px; }
 
 /* ═══════════════════════════════════════
+   TRADE TAB
+═══════════════════════════════════════ */
+#tab-trade { padding:28px; }
+
+.trade-locked-msg {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:300px; gap:16px; text-align:center;
+}
+.trade-locked-icon { font-size:48px; opacity:.3; }
+
+/* Trade propose panel */
+.trade-propose-wrap {
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:16px; align-items:start;
+  margin-bottom:24px;
+}
+.trade-panel-header {
+  font-family:var(--font-px); font-size:8px; color:var(--text2);
+  margin-bottom:12px; text-align:center;
+}
+.trade-poke-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(86px,1fr));
+  gap:6px; max-height:320px; overflow-y:auto;
+  padding:4px;
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+}
+.trade-pk {
+  background:var(--surface2); border:2px solid var(--border);
+  border-radius:8px; padding:6px 4px;
+  text-align:center; cursor:pointer;
+  transition:all .12s; user-select:none;
+  position:relative;
+}
+.trade-pk:hover { border-color:var(--gold); transform:translateY(-2px); }
+.trade-pk.tpk-sel { border-color:var(--blue); background:rgba(76,201,240,.1); box-shadow:0 0 10px rgba(76,201,240,.2); }
+.trade-pk.tpk-locked { opacity:.35; cursor:not-allowed; }
+.trade-pk img { width:64px; height:64px; image-rendering:pixelated; display:block; margin:0 auto; }
+.trade-pk .tpk-name { font-size:9px; font-weight:600; color:var(--text2); }
+.trade-pk .tpk-dead { font-size:9px; }
+.trade-pk .tpk-traded-badge {
+  position:absolute; top:2px; right:2px;
+  font-size:9px; line-height:1;
+}
+
+.trade-arrow-col {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; padding-top:32px;
+}
+.trade-arrow { font-size:28px; color:var(--muted); }
+
+.trade-player-select {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;
+}
+.trade-player-btn {
+  font-family:var(--font-px); font-size:6px;
+  padding:6px 10px; border-radius:20px;
+  cursor:pointer; border:1px solid var(--border);
+  background:var(--surface2); color:var(--text2);
+  transition:all .15s;
+}
+.trade-player-btn:hover { border-color:var(--text2); color:var(--text); }
+.trade-player-btn.active { background:var(--red); color:#fff; border-color:var(--red); }
+
+/* Trade offer cards */
+.trade-offer-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:16px;
+  margin-bottom:12px;
+  transition:border-color .15s;
+}
+.trade-offer-card.toc-incoming { border-color:rgba(76,201,240,.3); }
+.trade-offer-card.toc-outgoing { border-color:rgba(255,209,102,.2); }
+.trade-offer-card.toc-accepted { border-color:rgba(6,214,160,.4); }
+
+.toc-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px; flex-wrap:wrap; gap:8px;
+}
+.toc-label {
+  font-family:var(--font-px); font-size:7px;
+}
+.toc-label.lbl-incoming { color:var(--blue); }
+.toc-label.lbl-outgoing { color:var(--gold); }
+.toc-label.lbl-accepted { color:var(--green); }
+
+.toc-pokemon-row {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.toc-poke {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:var(--surface2); border-radius:8px; padding:8px;
+  min-width:80px;
+}
+.toc-poke img { width:64px; height:64px; image-rendering:pixelated; }
+.toc-poke .toc-pname { font-size:10px; font-weight:600; color:var(--text); }
+.toc-poke .toc-owner { font-size:10px; color:var(--muted); }
+.toc-swap-icon { font-size:22px; color:var(--muted); }
+.toc-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+/* phase chip */
+.phase-chip {
+  font-family:var(--font-px); font-size:6px;
+  padding:4px 9px; border-radius:20px;
+  display:inline-block;
+}
+.ph-picking { background:rgba(6,214,160,.12); color:var(--green); border:1px solid var(--green); }
+.ph-playing { background:rgba(230,57,70,.12); color:var(--red);   border:1px solid var(--red); }
+.ph-reveal  { background:rgba(255,209,102,.12);color:var(--gold); border:1px solid var(--gold); }
+
+/* run id pill */
+.run-id-pill {
+  font-family:var(--font-px); font-size:6px;
+  background:var(--surface3); border:1px solid var(--border);
+  border-radius:20px; padding:5px 10px; color:var(--muted);
+  cursor:pointer; transition:all .15s; display:inline-block;
+}
+.run-id-pill:hover { color:var(--text); border-color:var(--text2); }
+
+/* ═══════════════════════════════════════
    TOAST
 ═══════════════════════════════════════ */
 #toast {
@@ -673,25 +809,6 @@ input::placeholder { color:var(--muted); }
 .modal-box p  { color:var(--text2); font-size:14px; line-height:1.6; margin-bottom:20px; }
 .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
 
-/* phase chip */
-.phase-chip {
-  font-family:var(--font-px); font-size:6px;
-  padding:4px 9px; border-radius:20px;
-  display:inline-block;
-}
-.ph-picking { background:rgba(6,214,160,.12); color:var(--green); border:1px solid var(--green); }
-.ph-playing { background:rgba(230,57,70,.12); color:var(--red);   border:1px solid var(--red); }
-.ph-reveal  { background:rgba(255,209,102,.12);color:var(--gold); border:1px solid var(--gold); }
-
-/* run id pill */
-.run-id-pill {
-  font-family:var(--font-px); font-size:6px;
-  background:var(--surface3); border:1px solid var(--border);
-  border-radius:20px; padding:5px 10px; color:var(--muted);
-  cursor:pointer; transition:all .15s; display:inline-block;
-}
-.run-id-pill:hover { color:var(--text); border-color:var(--text2); }
-
 @media(max-width:640px){
   :root{ --sidebar-w:64px; }
   .nav-item span:not(.nav-icon){ display:none; }
@@ -699,6 +816,8 @@ input::placeholder { color:var(--muted); }
   .sidebar-player { display:none; }
   .sidebar-logo-text { display:none; }
   .tab-panel { padding:16px; }
+  .trade-propose-wrap { grid-template-columns:1fr; }
+  .trade-arrow-col { flex-direction:row; padding-top:0; }
 }
 </style>
 </head>
@@ -714,9 +833,7 @@ input::placeholder { color:var(--muted); }
   <p>Loading...</p>
 </div>
 
-<!-- ══════════════════════════════
-     SETUP PAGE
-══════════════════════════════ -->
+<!-- SETUP PAGE -->
 <div id="pg-setup">
   <div class="setup-box">
     <div class="setup-logo">
@@ -765,9 +882,7 @@ input::placeholder { color:var(--muted); }
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     APP SHELL
-══════════════════════════════ -->
+<!-- APP SHELL -->
 <div id="app-shell">
 
   <!-- SIDEBAR -->
@@ -803,6 +918,11 @@ input::placeholder { color:var(--muted); }
         <span class="nav-icon">🎭</span>
         <span>Reveal Night</span>
       </div>
+      <div class="nav-item nav-disabled" id="nav-trade" onclick="showTab('trade')">
+        <span class="nav-icon">🔄</span>
+        <span>Trade</span>
+        <span id="trade-nav-badge" style="display:none" class="trade-badge">0</span>
+      </div>
       <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
         <span class="nav-icon">⚙️</span>
         <span>Settings</span>
@@ -821,9 +941,7 @@ input::placeholder { color:var(--muted); }
     <div class="tab-panel" id="tab-select">
       <div class="px-title" style="font-size:11px">Select Player</div>
       <div class="text-muted mt8" id="sel-run-label"></div>
-
       <div class="player-grid" id="player-grid"></div>
-
       <div class="confirm-bar" id="confirm-bar">
         <div class="confirm-bar-text">Playing as <strong id="confirm-name"></strong></div>
         <button class="btn btn-gold btn-sm" onclick="confirmPlayer()">Confirm & Go to Picks →</button>
@@ -842,7 +960,6 @@ input::placeholder { color:var(--muted); }
         </div>
       </div>
 
-      <!-- Picking UI -->
       <div id="picking-ui">
         <div class="recipient-tabs" id="r-tabs"></div>
         <div class="card">
@@ -874,8 +991,6 @@ input::placeholder { color:var(--muted); }
 
     <!-- REVEAL NIGHT TAB -->
     <div class="tab-panel" id="tab-reveal">
-
-      <!-- Idle: choose who to reveal next -->
       <div class="reveal-idle" id="reveal-idle">
         <div class="px-title" style="font-size:13px;margin-bottom:10px">🎭 Reveal Night</div>
         <div class="px-sub mt8" style="margin-bottom:24px">Whose team are we revealing?</div>
@@ -895,17 +1010,13 @@ input::placeholder { color:var(--muted); }
         </div>
       </div>
 
-      <!-- Active reveal stage -->
       <div class="reveal-stage hidden" id="reveal-stage">
-        <!-- recipient header stays visible throughout -->
         <div style="text-align:center;margin-bottom:20px;padding:0 28px">
           <div class="reveal-ctx" id="rv-ctx"></div>
           <div class="reveal-who" id="rv-who"></div>
           <div class="reveal-prog" id="rv-prog"></div>
         </div>
-        <!-- revealed so far (accumulates as you click Next) -->
         <div id="rv-all-rows"></div>
-        <!-- current pending row -->
         <div class="reveal-row" id="rv-row" style="display:none"></div>
         <div class="reveal-nav" style="margin-top:24px;padding:0 28px">
           <div class="reveal-step-count" id="rv-count"></div>
@@ -915,23 +1026,78 @@ input::placeholder { color:var(--muted); }
           <button class="btn btn-ghost btn-xs" onclick="exitReveal()">Exit Reveal</button>
         </div>
       </div>
+    </div>
 
+    <!-- TRADE TAB -->
+    <div class="tab-panel" id="tab-trade">
+
+      <!-- Locked state (shown during picking/reveal) -->
+      <div id="trade-locked" class="trade-locked-msg" style="display:none">
+        <div class="trade-locked-icon">🔒</div>
+        <div class="px-sub" style="font-size:9px">TRADING UNLOCKS AFTER REVEAL NIGHT</div>
+        <div class="text-muted" style="font-size:13px;max-width:320px">Complete Reveal Night first. Once everyone's teams are revealed, you can propose trades here.</div>
+      </div>
+
+      <!-- Active trade UI -->
+      <div id="trade-active" style="display:none">
+
+        <!-- PROPOSE TRADE -->
+        <div style="margin-bottom:28px">
+          <div class="px-title" style="font-size:10px;margin-bottom:6px">🔄 Propose a Trade</div>
+          <div class="text-muted" style="font-size:12px;margin-bottom:20px">Select one of your Pokémon and one from another player's team.</div>
+
+          <div class="trade-propose-wrap">
+
+            <!-- LEFT: your team -->
+            <div class="card" style="padding:16px">
+              <div class="trade-panel-header">YOUR TEAM</div>
+              <div class="trade-poke-grid" id="trade-my-grid"></div>
+            </div>
+
+            <!-- MIDDLE arrow + propose button -->
+            <div class="trade-arrow-col">
+              <div class="trade-arrow">⇄</div>
+              <button class="btn btn-blue btn-sm" id="trade-propose-btn"
+                style="background:var(--blue);color:#001a20;box-shadow:0 4px 0 #1a5a70;font-size:7px;white-space:normal;text-align:center;min-width:80px;"
+                onclick="proposeTrade()" disabled>
+                Propose<br>Trade
+              </button>
+            </div>
+
+            <!-- RIGHT: pick opponent + their team -->
+            <div class="card" style="padding:16px">
+              <div class="trade-panel-header">THEIR TEAM</div>
+              <div class="trade-player-select" id="trade-opponent-tabs"></div>
+              <div class="trade-poke-grid" id="trade-their-grid"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- TRADE OFFERS LIST -->
+        <div style="margin-top:20px">
+          <div class="px-title" style="font-size:10px;margin-bottom:16px">📬 Trade Offers</div>
+          <div id="trade-offers-list">
+            <div class="text-muted" style="font-size:13px;">No active trades.</div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- SETTINGS TAB -->
     <div class="tab-panel" id="tab-settings" style="padding:20px 28px;">
 
-      <!-- Run ID -->
       <div class="card" style="margin-bottom:20px;text-align:center">
         <div class="px-sub" style="font-size:8px;margin-bottom:10px">RUN CODE — SHARE WITH FRIENDS</div>
         <div id="settings-run-id" style="font-family:var(--font-px);font-size:clamp(24px,5vw,42px);color:var(--gold);text-shadow:2px 2px 0 var(--gold-dark);letter-spacing:.2em;cursor:pointer;padding:8px 0;" onclick="copyRunId()" title="Click to copy">——</div>
         <div class="text-muted" style="font-size:12px;margin-top:6px">Click to copy</div>
       </div>
 
-      <!-- Main settings row: icon picker left, controls right -->
       <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
 
-        <!-- Icon picker — left, takes remaining space -->
         <div class="card" style="flex:1;min-width:300px;">
           <div class="px-sub" style="font-size:8px;margin-bottom:12px">YOUR ICON</div>
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
@@ -948,10 +1114,8 @@ input::placeholder { color:var(--muted); }
           <div id="icon-picker" style="display:flex;gap:6px;flex-wrap:wrap;overflow-y:auto;padding:4px 2px;"></div>
         </div>
 
-        <!-- Right column -->
         <div style="display:flex;flex-direction:column;gap:16px;width:220px;flex-shrink:0;">
 
-          <!-- Picks per player -->
           <div class="card">
             <div class="px-sub" style="font-size:8px;margin-bottom:12px">PICKS PER PLAYER</div>
             <p class="text-muted" style="font-size:12px;line-height:1.6;margin-bottom:12px">Pokémon each player picks per recipient (including themselves).</p>
@@ -961,7 +1125,6 @@ input::placeholder { color:var(--muted); }
             </div>
           </div>
 
-          <!-- Add player -->
           <div class="card">
             <div class="px-sub" style="font-size:8px;margin-bottom:12px">ADD PLAYER</div>
             <p class="text-muted" style="font-size:12px;line-height:1.6;margin-bottom:12px">Add a new participant. Existing picks are unaffected.</p>
@@ -969,7 +1132,6 @@ input::placeholder { color:var(--muted); }
             <button class="btn btn-gold btn-sm" style="width:100%" onclick="addPlayerToRun()">Add Player</button>
           </div>
 
-          <!-- Remove player -->
           <div class="card" style="border-color:rgba(230,57,70,.3);">
             <div class="px-sub" style="font-size:8px;margin-bottom:12px;color:var(--red)">REMOVE PLAYER</div>
             <p class="text-muted" style="font-size:12px;line-height:1.6;margin-bottom:12px">Permanently removes a player and all their picks.</p>
@@ -999,12 +1161,9 @@ input::placeholder { color:var(--muted); }
 <!-- TOAST -->
 <div id="toast"></div>
 
-<!-- ══════════════════════════════
-     FIREBASE + APP LOGIC
-══════════════════════════════ -->
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, deleteField }
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, deleteField, collection, addDoc, query, where, getDocs }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1091,8 +1250,6 @@ const POKEMON = [
   [385,"Jirachi"],[386,"Deoxys"]
 ];
 
-// Pokémon types (primary type per dex number, 1-386)
-// [primary, secondary] — null if single type
 const POKE_TYPES = {
   1:['grass','poison'],2:['grass','poison'],3:['grass','poison'],
   4:['fire',null],5:['fire',null],6:['fire','flying'],
@@ -1270,7 +1427,6 @@ const POKE_TYPES = {
   385:['steel','psychic'],386:['psychic',null]
 };
 
-// Faded type background colors (muted, dark-theme friendly)
 const TYPE_COLORS = {
   normal:  'rgba(168,168,120,.18)',
   fire:    'rgba(240,128,48,.2)',
@@ -1294,11 +1450,8 @@ const TYPE_COLORS = {
 
 const BADGES      = ["🪨","🌊","⚡","🌈","🔴","🌊","🔥","🌿"];
 const BADGE_NAMES = ["Boulder","Cascade","Thunder","Rainbow","Soul","Marsh","Volcano","Earth"];
-// Default avatar dex numbers — iconic Pokémon, one per player slot
 const AVATARS = [25,6,3,9,94,149,131,143,196,197,248,245,244,243,151];
-// Shuffle icon URL
 function shuffleIcon(dex){ return `https://raw.githubusercontent.com/nileplumb/PkmnShuffleMap/master/UICONS/pokemon/${dex}.png`; }
-// Render an avatar img tag
 function avatarImg(dex, size=28){
   return `<img src="${shuffleIcon(dex)}" style="width:${size}px;height:${size}px;object-fit:contain;" onerror="this.style.opacity='.3'"/>`;
 }
@@ -1309,16 +1462,22 @@ function avatarImg(dex, size=28){
 const S = {
   runId:       null,
   runData:     null,
-  player:      null,   // currently selected player name
-  pendingPlayer: null, // selected but not confirmed
-  draftPicks:  {},     // { recipientName: [dex,dex,dex] }
+  player:      null,
+  pendingPlayer: null,
+  draftPicks:  {},
   filteredPokemon: POKEMON,
   currentRecipient: null,
   unsub:       null,
+  unsubTrades: null,
   // reveal
   rvPickerIdx:       0,
   rvCurrentRecipient: null,
   rvRevealedPlayers:  [],
+  // trade
+  trades:          [],   // live list from Firestore
+  tradeMyDex:      null, // selected dex from my team
+  tradeTheirDex:   null, // selected dex from their team
+  tradeOpponent:   null, // opponent player name
 };
 
 /* ──────────────────────────────
@@ -1326,6 +1485,7 @@ const S = {
 ────────────────────────────── */
 function sprite(dex){ return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${dex}.png`; }
 function dexStr(dex){ return '#' + String(dex).padStart(3,'0'); }
+function pokeName(dex){ return (POKEMON.find(p=>p[0]===dex)||[dex,'???'])[1]; }
 
 function toast(msg, type=''){
   const t = document.getElementById('toast');
@@ -1366,6 +1526,9 @@ function showApp(){
 }
 
 function showTab(name){
+  // Block trade tab if not in playing phase
+  if(name==='trade' && S.runData?.phase !== 'playing') return;
+
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
@@ -1376,6 +1539,7 @@ function showTab(name){
   if(name==='select')   renderSelectTab();
   if(name==='reveal')   renderRevealIdle();
   if(name==='settings') renderSettings();
+  if(name==='trade')    renderTradeTab();
 }
 
 function updateSidebar(){
@@ -1388,6 +1552,36 @@ function updateSidebar(){
     nameEl.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${avatarImg(p.avatar,22)}${S.player}</span>`;
   } else {
     nameEl.textContent = S.player || '—';
+  }
+
+  // Trade tab enabled/disabled
+  const navTrade = document.getElementById('nav-trade');
+  if(rd.phase === 'playing'){
+    navTrade.classList.remove('nav-disabled');
+  } else {
+    navTrade.classList.add('nav-disabled');
+  }
+
+  // Trade badge count
+  updateTradeBadge();
+}
+
+function updateTradeBadge(){
+  if(!S.player) return;
+  const badgeEl = document.getElementById('trade-nav-badge');
+  if(!badgeEl) return;
+
+  // Count trades involving this player that are active (pending or accepted)
+  const active = S.trades.filter(t => {
+    if(t.status === 'finalized' || t.status === 'declined' || t.status === 'cancelled') return false;
+    return t.proposerName === S.player || t.recipientName === S.player;
+  });
+
+  if(active.length > 0 && S.runData?.phase === 'playing'){
+    badgeEl.textContent = active.length;
+    badgeEl.style.display = 'inline-flex';
+  } else {
+    badgeEl.style.display = 'none';
   }
 }
 
@@ -1462,7 +1656,6 @@ async function joinRun(){
 
 function enterApp(){
   showApp();
-  // Restore last player from localStorage
   const lastPlayer = localStorage.getItem('lastPlayer');
   if(lastPlayer && S.runData?.participants?.find(p=>p.name===lastPlayer)){
     S.player = lastPlayer;
@@ -1476,13 +1669,14 @@ function enterApp(){
   }
   updateSidebar();
   subscribeToRun();
-  // Default to summary if player known, otherwise select player
+  subscribeToTrades();
   showTab(S.player ? 'summary' : 'select');
 }
 
 function goToSetup(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
-  S.player=null; S.runId=null; S.runData=null;
+  if(S.unsubTrades){ S.unsubTrades(); S.unsubTrades=null; }
+  S.player=null; S.runId=null; S.runData=null; S.trades=[];
   localStorage.removeItem('lastRunId');
   localStorage.removeItem('lastPlayer');
   showSetup();
@@ -1496,18 +1690,29 @@ function subscribeToRun(){
   S.unsub = onSnapshot(doc(db,'runs',S.runId), snap=>{
     if(!snap.exists()) return;
     S.runData = snap.data();
-    // Apply icons map onto participant avatars
     const iconsMap = S.runData.icons||{};
     S.runData.participants.forEach(p=>{ if(iconsMap[p.name]) p.avatar=iconsMap[p.name]; });
     updateSidebar();
-    // refresh active tab quietly
     const active = document.querySelector('.tab-panel.active');
     if(active){
       const id = active.id.replace('tab-','');
       if(id==='summary')  renderSummary();
       if(id==='select')   renderSelectTab();
       if(id==='settings') renderSettings();
+      if(id==='trade')    renderTradeTab();
     }
+  });
+}
+
+function subscribeToTrades(){
+  if(S.unsubTrades) S.unsubTrades();
+  if(!S.runId) return;
+  const tradesCol = collection(db, 'runs', S.runId, 'trades');
+  S.unsubTrades = onSnapshot(tradesCol, snap=>{
+    S.trades = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    updateTradeBadge();
+    const active = document.querySelector('.tab-panel.active');
+    if(active && active.id==='tab-trade') renderTradeTab();
   });
 }
 
@@ -1521,7 +1726,8 @@ function renderSelectTab(){
   const grid = document.getElementById('player-grid'); grid.innerHTML='';
   rd.participants.forEach(p=>{
     const picks = (rd.picks||{})[p.name]||{};
-    const _ppn = rd.picksPerPlayer||3; const doneCount = rd.participants.filter(r=>(picks[r.name]||[]).length===_ppn).length;
+    const _ppn = rd.picksPerPlayer||3;
+    const doneCount = rd.participants.filter(r=>(picks[r.name]||[]).length===_ppn).length;
     const card = document.createElement('div');
     const allDone = doneCount===rd.participants.length;
     card.className = 'player-card'+(allDone?' done':'')+(S.pendingPlayer===p.name?' selected-card':'');
@@ -1552,13 +1758,10 @@ function confirmPlayer(){
   S.pendingPlayer = null;
   localStorage.setItem('lastPlayer', S.player);
   updateSidebar();
-  // Init draft picks from any saved data
   const rd = S.runData;
   const saved = (rd.picks||{})[S.player]||{};
   S.draftPicks = {};
-  rd.participants.forEach(p=>{
-    S.draftPicks[p.name] = [...(saved[p.name]||[])];
-  });
+  rd.participants.forEach(p=>{ S.draftPicks[p.name] = [...(saved[p.name]||[])]; });
   S.currentRecipient = rd.participants[0].name;
   showTab('summary');
 }
@@ -1568,19 +1771,13 @@ function confirmPlayer(){
 ────────────────────────────── */
 function renderPicksTab(){
   const rd = S.runData; if(!rd) return;
-
-  if(!S.player){
-    toast('Select a player first','t-err');
-    showTab('select'); return;
-  }
-
+  if(!S.player){ toast('Select a player first','t-err'); showTab('select'); return; }
   document.getElementById('picking-as-label').textContent = 'PICKING AS: '+S.player;
   document.getElementById('picking-ui').style.display='block';
   const n = S.runData.picksPerPlayer||3;
   const lbl = document.getElementById('picks-per-label');
   if(lbl) lbl.textContent = `Pick ${n} Pokémon for each player`;
   setAutosaveStatus('saved');
-
   renderRTabs();
   renderPickingPanel();
   renderPokeGrid();
@@ -1609,7 +1806,6 @@ function renderRTabs(){
     tab.onclick = ()=>{ S.currentRecipient=p.name; renderRTabs(); renderPickingPanel(); };
     el.appendChild(tab);
   });
-  // Show warning banner if any overflow
   const hasOver = rd.participants.some(p=>(S.draftPicks[p.name]||[]).length>(rd.picksPerPlayer||3));
   let banner = document.getElementById('overflow-banner');
   if(hasOver){
@@ -1636,7 +1832,6 @@ function renderSelPicks(){
   const picks = S.draftPicks[r]||[];
   const el = document.getElementById('sel-picks'); el.innerHTML='';
   const n = S.runData.picksPerPlayer||3;
-  const isOver = picks.length > n;
   for(let i=0;i<picks.length||i<n;i++){
     const slot = document.createElement('div'); slot.className='pick-slot';
     if(picks[i]){
@@ -1661,7 +1856,6 @@ function renderPokeGrid(){
   const curPicks = S.draftPicks[r]||[];
   const allUsed = [];
   Object.entries(S.draftPicks).forEach(([rname,arr])=>{ if(rname!==r) arr.forEach(d=>allUsed.push(d)); });
-
   const grid = document.getElementById('poke-grid'); grid.innerHTML='';
   S.filteredPokemon.forEach(([dex,name])=>{
     const isSel = curPicks.includes(dex);
@@ -1738,15 +1932,15 @@ function renderSummary(){
   const deaths    = rd.deaths||{};
   const badgesMap = rd.badges||{};
   const nicknames = rd.nicknames||{};
+  const tradedCards = rd.tradedCards||{};
   const ps        = rd.participants;
 
   const wrap  = document.createElement('div'); wrap.className='matrix-wrap';
   const table = document.createElement('table'); table.className='matrix-table';
 
-  // ── HEADER ROW ──
+  // HEADER ROW
   const thead = document.createElement('thead');
   const hrow  = document.createElement('tr');
-
   const corner = document.createElement('th'); corner.className='matrix-corner';
   corner.innerHTML='<div class="matrix-corner-label">Picker ↓<br>→</div>';
   hrow.appendChild(corner);
@@ -1767,11 +1961,10 @@ function renderSummary(){
   thead.appendChild(hrow);
   table.appendChild(thead);
 
-  // ── BODY ROWS ──
+  // BODY ROWS
   const tbody = document.createElement('tbody');
   ps.forEach(picker=>{
     const tr = document.createElement('tr');
-
     const rh = document.createElement('td'); rh.className='matrix-row-header';
     rh.innerHTML=`<div class="mrh-inner"><div class="mrh-avatar">${avatarImg(picker.avatar,28)}</div><span class="mrh-name">${picker.name}</span></div>`;
     tr.appendChild(rh);
@@ -1806,6 +1999,7 @@ function renderSummary(){
           const dd = deaths[key]||{dead:false};
           const nickKey = `${recipient.name}__${dex}`;
           const nickname = nicknames[nickKey]||'';
+          const isTraded = !!tradedCards[nickKey];
 
           const types = POKE_TYPES[dex]||['normal',null];
           const c1 = TYPE_COLORS[types[0]]||'rgba(168,168,120,.18)';
@@ -1813,11 +2007,11 @@ function renderSummary(){
           const typeColor = c2
             ? `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`
             : c1;
+
           const card=document.createElement('div');
-          card.className='m-poke'+(dd.dead?' mp-dead':'');
+          card.className='m-poke'+(dd.dead?' mp-dead':'')+(isTraded?' mp-traded':'');
           if(!dd.dead) card.style.background = typeColor;
 
-          // Build card DOM manually so we can attach event listeners
           const deadBtn = document.createElement('button');
           deadBtn.className='mp-dead-btn';
           deadBtn.title = dd.dead?'Mark Alive':'Mark Dead';
@@ -1852,11 +2046,18 @@ function renderSummary(){
           });
           nicknameInput.addEventListener('focus', e=> e.target.select());
 
-
           const realName = document.createElement('span');
           realName.className = 'mp-realname';
-          // Only show real name if there's a custom nickname
           realName.textContent = (nickname && nickname!==poke[1]) ? poke[1] : '';
+
+          // Trade icon overlay
+          if(isTraded){
+            const tradeIcon = document.createElement('span');
+            tradeIcon.className = 'mp-trade-icon';
+            tradeIcon.textContent = '🔄';
+            tradeIcon.title = 'This Pokémon was traded';
+            card.appendChild(tradeIcon);
+          }
 
           card.appendChild(deadBtn);
           card.appendChild(img);
@@ -1885,8 +2086,6 @@ async function saveNickname(nickKey, value){
 
 async function toggleBadge(playerName, playerIdx, badgeIdx){
   const rd=S.runData;
-  // Store badges in a flat map: badges.PlayerName = count
-  // This avoids Firestore's array index dot-notation issue
   const badgesMap = rd.badges || {};
   const cur = badgesMap[playerName] || 0;
   const newVal = badgeIdx < cur ? badgeIdx : badgeIdx + 1;
@@ -1903,8 +2102,6 @@ async function toggleDead(key){
   } catch(e){ toast('Error: '+e.message,'t-err'); }
 }
 
-
-
 /* ──────────────────────────────
    REVEAL NIGHT TAB
 ────────────────────────────── */
@@ -1916,7 +2113,6 @@ function renderRevealIdle(){
   });
   document.getElementById('reveal-submit-warning').style.display = allHavePicks?'none':'block';
 
-  // Build player selection grid
   const grid = document.getElementById('reveal-player-pick'); grid.innerHTML='';
   rd.participants.forEach(p=>{
     const revealed = (S.rvRevealedPlayers||[]).includes(p.name);
@@ -1948,8 +2144,6 @@ function startRevealForPlayer(recipientName){
   document.getElementById('rv-ctx').textContent  = "Revealing team for:";
   document.getElementById('rv-who').textContent  = recipientName.toUpperCase();
 
-  // Build the full grid of question marks upfront
-  // Own picks are immediately revealed; everyone else stays hidden
   const allRows = document.getElementById('rv-all-rows');
   allRows.innerHTML = '';
 
@@ -1975,7 +2169,6 @@ function startRevealForPlayer(recipientName){
       card.className='rv-card';
       card.id=`rv-placeholder-${pi}-${i}`;
       if(isSelf && picksForRecip[i]){
-        // Own picks: show immediately
         const dex=picksForRecip[i];
         const poke=POKEMON.find(p=>p[0]===dex)||[dex,'Unknown'];
         card.innerHTML=`<img src="${sprite(dex)}" alt="${poke[1]}"/><div class="rv-num">${dexStr(dex)}</div><div class="rv-name">${poke[1]}</div>`;
@@ -1988,9 +2181,6 @@ function startRevealForPlayer(recipientName){
     allRows.appendChild(row);
   });
 
-  // Skip own picks row — find first non-self picker
-  const selfIdx = rd.participants.findIndex(p=>p.name===recipientName);
-  // Start from picker 0 but skip self when it comes up
   renderRevealStep();
 }
 
@@ -1999,7 +2189,6 @@ function renderRevealStep(){
   const n = rd.picksPerPlayer||3;
   const pickers = rd.participants;
 
-  // Skip self — they're already revealed in the placeholder grid
   while(S.rvPickerIdx < pickers.length && pickers[S.rvPickerIdx].name === S.rvCurrentRecipient){
     S.rvPickerIdx++;
   }
@@ -2018,7 +2207,6 @@ function renderRevealStep(){
   const pickerGlobalIdx = pickers.findIndex(p=>p.name===picker.name);
   const picksForRecip = ((rd.picks||{})[picker.name]||{})[S.rvCurrentRecipient]||[];
 
-  // Animate into the existing placeholder slots for this picker
   for(let i=0;i<n;i++){
     const card = document.getElementById(`rv-placeholder-${pickerGlobalIdx}-${i}`);
     if(!card) continue;
@@ -2041,7 +2229,6 @@ function revealNext(){
 }
 
 function finishPlayerReveal(){
-  // Mark this player as revealed
   if(!S.rvRevealedPlayers) S.rvRevealedPlayers=[];
   if(!S.rvRevealedPlayers.includes(S.rvCurrentRecipient)){
     S.rvRevealedPlayers.push(S.rvCurrentRecipient);
@@ -2081,7 +2268,6 @@ async function revertToPickingPhase(){
     const snap = await getDoc(doc(db,'runs',S.runId));
     S.runData = snap.data();
     S.rvRevealedPlayers = [];
-    // Restore last player and go straight to picks
     const lastPlayer = localStorage.getItem('lastPlayer');
     if(lastPlayer && S.runData?.participants?.find(p=>p.name===lastPlayer)){
       S.player = lastPlayer;
@@ -2112,21 +2298,453 @@ async function finishReveal(){
 }
 
 /* ──────────────────────────────
-   INIT
+   TRADE TAB
 ────────────────────────────── */
-async function init(){
-  const lastId = localStorage.getItem('lastRunId');
-  if(lastId){
-    try{
-      const snap = await getDoc(doc(db,'runs',lastId));
-      if(snap.exists()){
-        S.runId=lastId; S.runData=snap.data();
-        hideLoading(); enterApp(); return;
-      }
-    } catch(e){}
+
+// Returns all dex numbers currently in a player's recipient column (their team)
+function getPlayerTeam(playerName){
+  const rd = S.runData; if(!rd) return [];
+  const picks = rd.picks||{};
+  const team = [];
+  Object.values(picks).forEach(pickerPicks=>{
+    const arr = pickerPicks[playerName]||[];
+    arr.forEach(dex=> team.push(dex));
+  });
+  return team;
+}
+
+// Returns set of dex numbers currently locked in a pending/accepted trade
+function getLockedDex(){
+  const locked = new Set();
+  S.trades.forEach(t=>{
+    if(t.status==='pending' || t.status==='accepted'){
+      locked.add(t.proposerDex);
+      locked.add(t.recipientDex);
+    }
+  });
+  return locked;
+}
+
+function renderTradeTab(){
+  const rd = S.runData; if(!rd) return;
+
+  const isPlaying = rd.phase === 'playing';
+  document.getElementById('trade-locked').style.display = isPlaying ? 'none' : 'flex';
+  document.getElementById('trade-active').style.display = isPlaying ? 'block' : 'none';
+
+  if(!isPlaying) return;
+  if(!S.player) return;
+
+  renderTradeMyGrid();
+  renderTradeOpponentTabs();
+  renderTradeOffersList();
+  updateProposeButton();
+}
+
+function renderTradeMyGrid(){
+  const grid = document.getElementById('trade-my-grid'); if(!grid) return;
+  grid.innerHTML='';
+
+  const myTeam = getPlayerTeam(S.player);
+  const locked = getLockedDex();
+  const tradedCards = S.runData.tradedCards||{};
+
+  if(myTeam.length===0){
+    grid.innerHTML='<div class="text-muted" style="font-size:12px;grid-column:1/-1">No Pokémon on your team yet.</div>';
+    return;
   }
-  hideLoading();
-  showSetup();
+
+  myTeam.forEach(dex=>{
+    const poke = POKEMON.find(p=>p[0]===dex)||[dex,'???'];
+    const isLocked = locked.has(dex);
+    const isSel = S.tradeMyDex===dex;
+    const isTraded = !!tradedCards[`${S.player}__${dex}`];
+    const deaths = S.runData.deaths||{};
+    const isDead = Object.entries(deaths).some(([k,v])=>
+      k.endsWith(`__${S.player}__${dex}`) && v.dead
+    );
+
+    const card = document.createElement('div');
+    card.className = 'trade-pk'+(isSel?' tpk-sel':'')+(isLocked?' tpk-locked':'');
+    card.title = isLocked ? 'In an active trade offer' : poke[1];
+    card.innerHTML=`
+      <img src="${sprite(dex)}" alt="${poke[1]}"/>
+      <div class="tpk-name">${poke[1]}</div>
+      ${isDead?'<div class="tpk-dead">💀</div>':''}
+      ${isTraded?'<span class="tpk-traded-badge" title="Previously traded">🔄</span>':''}
+    `;
+    if(!isLocked){
+      card.onclick = ()=>{
+        S.tradeMyDex = (S.tradeMyDex===dex) ? null : dex;
+        renderTradeMyGrid();
+        updateProposeButton();
+      };
+    }
+    grid.appendChild(card);
+  });
+}
+
+function renderTradeOpponentTabs(){
+  const tabsEl = document.getElementById('trade-opponent-tabs'); if(!tabsEl) return;
+  tabsEl.innerHTML='';
+
+  const rd = S.runData;
+  const others = rd.participants.filter(p=>p.name!==S.player);
+
+  // Default to first opponent if none selected
+  if(!S.tradeOpponent && others.length>0) S.tradeOpponent = others[0].name;
+
+  others.forEach(p=>{
+    const btn = document.createElement('div');
+    btn.className='trade-player-btn'+(p.name===S.tradeOpponent?' active':'');
+    btn.textContent = p.name;
+    btn.onclick = ()=>{
+      S.tradeOpponent = p.name;
+      S.tradeTheirDex = null;
+      renderTradeOpponentTabs();
+      renderTradeTheirGrid();
+      updateProposeButton();
+    };
+    tabsEl.appendChild(btn);
+  });
+
+  renderTradeTheirGrid();
+}
+
+function renderTradeTheirGrid(){
+  const grid = document.getElementById('trade-their-grid'); if(!grid) return;
+  grid.innerHTML='';
+  if(!S.tradeOpponent){ grid.innerHTML='<div class="text-muted" style="font-size:12px">Select a player</div>'; return; }
+
+  const theirTeam = getPlayerTeam(S.tradeOpponent);
+  const locked = getLockedDex();
+  const tradedCards = S.runData.tradedCards||{};
+
+  if(theirTeam.length===0){
+    grid.innerHTML='<div class="text-muted" style="font-size:12px;grid-column:1/-1">No Pokémon on their team yet.</div>';
+    return;
+  }
+
+  theirTeam.forEach(dex=>{
+    const poke = POKEMON.find(p=>p[0]===dex)||[dex,'???'];
+    const isLocked = locked.has(dex);
+    const isSel = S.tradeTheirDex===dex;
+    const isTraded = !!tradedCards[`${S.tradeOpponent}__${dex}`];
+    const deaths = S.runData.deaths||{};
+    const isDead = Object.entries(deaths).some(([k,v])=>
+      k.endsWith(`__${S.tradeOpponent}__${dex}`) && v.dead
+    );
+
+    const card = document.createElement('div');
+    card.className = 'trade-pk'+(isSel?' tpk-sel':'')+(isLocked?' tpk-locked':'');
+    card.title = isLocked ? 'In an active trade offer' : poke[1];
+    card.innerHTML=`
+      <img src="${sprite(dex)}" alt="${poke[1]}"/>
+      <div class="tpk-name">${poke[1]}</div>
+      ${isDead?'<div class="tpk-dead">💀</div>':''}
+      ${isTraded?'<span class="tpk-traded-badge" title="Previously traded">🔄</span>':''}
+    `;
+    if(!isLocked){
+      card.onclick = ()=>{
+        S.tradeTheirDex = (S.tradeTheirDex===dex) ? null : dex;
+        renderTradeTheirGrid();
+        updateProposeButton();
+      };
+    }
+    grid.appendChild(card);
+  });
+}
+
+function updateProposeButton(){
+  const btn = document.getElementById('trade-propose-btn'); if(!btn) return;
+  const ready = !!(S.tradeMyDex && S.tradeTheirDex && S.tradeOpponent);
+  btn.disabled = !ready;
+}
+
+async function proposeTrade(){
+  if(!S.tradeMyDex || !S.tradeTheirDex || !S.tradeOpponent){ toast('Select a Pokémon from each side','t-err'); return; }
+  if(!S.player){ toast('No player selected','t-err'); return; }
+
+  // Double-check not locked
+  const locked = getLockedDex();
+  if(locked.has(S.tradeMyDex) || locked.has(S.tradeTheirDex)){
+    toast('One of those Pokémon is already in an active trade','t-err'); return;
+  }
+
+  try{
+    const tradesCol = collection(db, 'runs', S.runId, 'trades');
+    await addDoc(tradesCol, {
+      status: 'pending',
+      proposerName: S.player,
+      proposerDex:  S.tradeMyDex,
+      recipientName: S.tradeOpponent,
+      recipientDex:  S.tradeTheirDex,
+      createdAt: Date.now()
+    });
+    toast(`Trade proposed to ${S.tradeOpponent}!`, 't-ok');
+    S.tradeMyDex = null;
+    S.tradeTheirDex = null;
+    renderTradeMyGrid();
+    renderTradeTheirGrid();
+    updateProposeButton();
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+function renderTradeOffersList(){
+  const el = document.getElementById('trade-offers-list'); if(!el) return;
+  el.innerHTML='';
+
+  // Split trades into relevant ones
+  const relevant = S.trades.filter(t=>
+    (t.proposerName===S.player || t.recipientName===S.player) &&
+    t.status !== 'finalized' && t.status !== 'cancelled' && t.status !== 'declined'
+  );
+
+  // Also show recently finalized (last 5, for context)
+  const finalized = S.trades
+    .filter(t=>(t.proposerName===S.player || t.recipientName===S.player) && t.status==='finalized')
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+    .slice(0,5);
+
+  if(relevant.length===0 && finalized.length===0){
+    el.innerHTML='<div class="text-muted" style="font-size:13px;">No active trades.</div>';
+    return;
+  }
+
+  // Active trades first
+  relevant.forEach(t=> el.appendChild(buildTradeCard(t)));
+
+  // Finalized trades section
+  if(finalized.length>0){
+    const hdr = document.createElement('div');
+    hdr.style.cssText='font-family:var(--font-px);font-size:7px;color:var(--muted);margin:16px 0 10px;';
+    hdr.textContent = 'COMPLETED TRADES';
+    el.appendChild(hdr);
+    finalized.forEach(t=> el.appendChild(buildTradeCard(t)));
+  }
+}
+
+function buildTradeCard(t){
+  const isProposer  = t.proposerName === S.player;
+  const isRecipient = t.recipientName === S.player;
+
+  const propPoke = pokeName(t.proposerDex);
+  const recPoke  = pokeName(t.recipientDex);
+
+  // Label + styling
+  let labelClass, labelText, cardClass;
+  if(t.status==='finalized'){
+    labelClass='lbl-accepted'; labelText='✓ FINALIZED'; cardClass='';
+  } else if(t.status==='accepted' && isProposer){
+    labelClass='lbl-accepted'; labelText='✓ ACCEPTED — CONFIRM TO FINALIZE'; cardClass='toc-accepted';
+  } else if(t.status==='accepted' && isRecipient){
+    labelClass='lbl-accepted'; labelText='✓ YOU ACCEPTED — WAITING FOR CONFIRMATION'; cardClass='toc-accepted';
+  } else if(t.status==='pending' && isProposer){
+    labelClass='lbl-outgoing'; labelText='⏳ PENDING — WAITING FOR RESPONSE'; cardClass='toc-outgoing';
+  } else if(t.status==='pending' && isRecipient){
+    labelClass='lbl-incoming'; labelText='📬 INCOMING TRADE OFFER'; cardClass='toc-incoming';
+  } else {
+    labelClass=''; labelText=t.status.toUpperCase(); cardClass='';
+  }
+
+  const card = document.createElement('div');
+  card.className = `trade-offer-card ${cardClass}`;
+
+  // Header
+  const hdr = document.createElement('div'); hdr.className='toc-header';
+  hdr.innerHTML=`<span class="toc-label ${labelClass}">${labelText}</span>
+    <span style="font-size:11px;color:var(--muted)">${isProposer?'→ '+t.recipientName:'← '+t.proposerName}</span>`;
+  card.appendChild(hdr);
+
+  // Pokemon row
+  const pokeRow = document.createElement('div'); pokeRow.className='toc-pokemon-row';
+
+  // Proposer's pokemon (left side — always the proposer's side)
+  const p1 = document.createElement('div'); p1.className='toc-poke';
+  p1.innerHTML=`<img src="${sprite(t.proposerDex)}" alt="${propPoke}"/>
+    <div class="toc-pname">${propPoke}</div>
+    <div class="toc-owner">${t.proposerName}'s</div>`;
+
+  const swapIcon = document.createElement('div'); swapIcon.className='toc-swap-icon';
+  swapIcon.textContent='⇄';
+
+  const p2 = document.createElement('div'); p2.className='toc-poke';
+  p2.innerHTML=`<img src="${sprite(t.recipientDex)}" alt="${recPoke}"/>
+    <div class="toc-pname">${recPoke}</div>
+    <div class="toc-owner">${t.recipientName}'s</div>`;
+
+  pokeRow.appendChild(p1);
+  pokeRow.appendChild(swapIcon);
+  pokeRow.appendChild(p2);
+  card.appendChild(pokeRow);
+
+  // Action buttons
+  if(t.status !== 'finalized'){
+    const actions = document.createElement('div'); actions.className='toc-actions';
+
+    if(t.status==='pending' && isProposer){
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className='btn btn-ghost btn-xs';
+      cancelBtn.textContent='Cancel Offer';
+      cancelBtn.onclick = ()=> cancelTrade(t.id);
+      actions.appendChild(cancelBtn);
+    }
+
+    if(t.status==='pending' && isRecipient){
+      const acceptBtn = document.createElement('button');
+      acceptBtn.className='btn btn-green btn-xs';
+      acceptBtn.textContent='Accept';
+      acceptBtn.onclick = ()=> acceptTrade(t.id);
+
+      const declineBtn = document.createElement('button');
+      declineBtn.className='btn btn-ghost btn-xs';
+      declineBtn.style.color='var(--red)';
+      declineBtn.textContent='Decline';
+      declineBtn.onclick = ()=> declineTrade(t.id);
+
+      actions.appendChild(acceptBtn);
+      actions.appendChild(declineBtn);
+    }
+
+    if(t.status==='accepted' && isProposer){
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className='btn btn-gold btn-xs';
+      confirmBtn.textContent='✓ Confirm & Finalize Trade';
+      confirmBtn.onclick = ()=> confirmTrade(t);
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className='btn btn-ghost btn-xs';
+      cancelBtn.style.color='var(--muted)';
+      cancelBtn.textContent='Cancel';
+      cancelBtn.onclick = ()=> cancelTrade(t.id);
+
+      actions.appendChild(confirmBtn);
+      actions.appendChild(cancelBtn);
+    }
+
+    if(t.status==='accepted' && isRecipient){
+      // Recipient is waiting — can no longer change their mind once accepted
+      // (per spec: sender must confirm, recipient already accepted)
+    }
+
+    card.appendChild(actions);
+  }
+
+  return card;
+}
+
+async function cancelTrade(tradeId){
+  try{
+    const tradeRef = doc(db,'runs',S.runId,'trades',tradeId);
+    await updateDoc(tradeRef, {status:'cancelled'});
+    toast('Trade cancelled.','t-ok');
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+async function acceptTrade(tradeId){
+  try{
+    const tradeRef = doc(db,'runs',S.runId,'trades',tradeId);
+    await updateDoc(tradeRef, {status:'accepted'});
+    toast('Trade accepted! Waiting for sender to confirm.','t-ok');
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+async function declineTrade(tradeId){
+  try{
+    const tradeRef = doc(db,'runs',S.runId,'trades',tradeId);
+    await updateDoc(tradeRef, {status:'declined'});
+    toast('Trade declined.','t-ok');
+  } catch(e){ toast('Error: '+e.message,'t-err'); }
+}
+
+async function confirmTrade(t){
+  // Execute the swap
+  const rd = S.runData;
+  const picks = JSON.parse(JSON.stringify(rd.picks||{})); // deep copy
+
+  const proposerDex  = t.proposerDex;
+  const recipientDex = t.recipientDex;
+  const proposerName  = t.proposerName;
+  const recipientName = t.recipientName;
+
+  // Find and swap the dex numbers in the recipient arrays
+  // proposerDex lives in proposerName's column somewhere
+  // recipientDex lives in recipientName's column somewhere
+  let swappedProposer = false, swappedRecipient = false;
+
+  Object.keys(picks).forEach(picker=>{
+    // Swap proposerDex out of proposerName's column
+    if(picks[picker][proposerName]){
+      const idx = picks[picker][proposerName].indexOf(proposerDex);
+      if(idx !== -1){
+        picks[picker][proposerName][idx] = recipientDex;
+        swappedProposer = true;
+      }
+    }
+    // Swap recipientDex out of recipientName's column
+    if(picks[picker][recipientName]){
+      const idx = picks[picker][recipientName].indexOf(recipientDex);
+      if(idx !== -1){
+        picks[picker][recipientName][idx] = proposerDex;
+        swappedRecipient = true;
+      }
+    }
+  });
+
+  if(!swappedProposer || !swappedRecipient){
+    toast('Error: Could not find Pokémon to swap. Trade data may be stale.','t-err');
+    return;
+  }
+
+  // Migrate death keys
+  // Old: Picker__ProposerName__proposerDex → Picker__ProposerName__recipientDex
+  // Old: Picker__RecipientName__recipientDex → Picker__RecipientName__proposerDex
+  const deaths = JSON.parse(JSON.stringify(rd.deaths||{}));
+  const deathUpdates = {};
+
+  Object.keys(deaths).forEach(key=>{
+    const parts = key.split('__');
+    if(parts.length === 3){
+      const [picker, column, dexStr] = parts;
+      const dex = parseInt(dexStr);
+      if(column===proposerName && dex===proposerDex){
+        // This card is moving to recipientName's column
+        const newKey = `${picker}__${proposerName}__${recipientDex}`;
+        deathUpdates[`deaths.${key}`] = deleteField();
+        deathUpdates[`deaths.${newKey}`] = deaths[key];
+      } else if(column===recipientName && dex===recipientDex){
+        // This card is moving to proposerName's column
+        const newKey = `${picker}__${recipientName}__${proposerDex}`;
+        deathUpdates[`deaths.${key}`] = deleteField();
+        deathUpdates[`deaths.${newKey}`] = deaths[key];
+      }
+    }
+  });
+
+  // Mark both dex positions as traded (keyed by RecipientName__dex after the swap)
+  // After swap: proposerDex is now in recipientName's column, recipientDex in proposerName's
+  const tradedCardKey1 = `${recipientName}__${proposerDex}`;
+  const tradedCardKey2 = `${proposerName}__${recipientDex}`;
+
+  try{
+    // Build the full update object
+    const updateObj = {
+      picks,
+      [`tradedCards.${tradedCardKey1}`]: true,
+      [`tradedCards.${tradedCardKey2}`]: true,
+      ...deathUpdates
+    };
+    await updateDoc(doc(db,'runs',S.runId), updateObj);
+
+    // Mark trade as finalized
+    const tradeRef = doc(db,'runs',S.runId,'trades',t.id);
+    await updateDoc(tradeRef, {status:'finalized'});
+
+    toast(`Trade complete! ${pokeName(proposerDex)} ⇄ ${pokeName(recipientDex)}`,'t-ok');
+  } catch(e){
+    toast('Error finalizing trade: '+e.message,'t-err');
+    console.error(e);
+  }
 }
 
 /* ──────────────────────────────
@@ -2134,9 +2752,7 @@ async function init(){
 ────────────────────────────── */
 function renderSettings(){
   const rd = S.runData; if(!rd) return;
-
   document.getElementById('settings-run-id').textContent = rd.runId||'——';
-
   const ppInput = document.getElementById('settings-picks-per');
   if(ppInput) ppInput.value = rd.picksPerPlayer||3;
 
@@ -2148,7 +2764,6 @@ function renderSettings(){
   const curLabel = document.getElementById('icon-current-label');
   if(curLabel) curLabel.textContent = `Current: ${curPoke?curPoke[1]:'Pokémon #'+curDex} ${S.player?'('+S.player+')':''}`;
 
-  // Populate remove player dropdown
   const removeSelect = document.getElementById('settings-remove-select');
   if(removeSelect){
     removeSelect.innerHTML='<option value="">— Select player —</option>';
@@ -2176,14 +2791,12 @@ function filterIconSearch(){
     ? POKEMON.filter(pk=> pk[1].toLowerCase().includes(query) || String(pk[0]).includes(query))
     : POKEMON;
 
-  // All results, no limit
   filtered.forEach(pk=>{
     const dex = pk[0];
     const isCur = dex===curDex;
     const btn = document.createElement('button');
     btn.style.cssText=`background:${isCur?'rgba(255,209,102,.15)':'var(--surface2)'};border:2px solid ${isCur?'var(--gold)':'var(--border)'};border-radius:8px;padding:5px;cursor:pointer;transition:border-color .12s;display:flex;flex-direction:column;align-items:center;gap:3px;width:68px;`;
     btn.title = pk[1];
-    // Use 56px display size for crispness — shuffle icons are 40px native so minimal upscale
     btn.innerHTML = `<img src="${shuffleIcon(dex)}" style="width:40px;height:40px;object-fit:contain;" onerror="this.style.opacity='.2'"/><div style="font-size:7px;color:var(--muted);font-family:var(--font-px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;text-align:center;">${pk[1]}</div>`;
     btn.onclick = ()=> savePlayerIcon(dex);
     grid.appendChild(btn);
@@ -2214,7 +2827,6 @@ async function removePlayerFromRun(){
   const confirmInp = document.getElementById('settings-remove-confirm');
   const selectedName = sel.value;
   const typedName = (confirmInp.value||'').trim();
-
   if(!selectedName){ toast('Select a player to remove','t-err'); return; }
   if(typedName.toLowerCase() !== selectedName.toLowerCase()){
     toast('Name does not match — please type it exactly','t-err');
@@ -2224,25 +2836,22 @@ async function removePlayerFromRun(){
   }
   const rd = S.runData;
   if(rd.participants.length <= 2){ toast('Cannot remove — minimum 2 players','t-err'); return; }
-
   const updatedParticipants = rd.participants.filter(p=>p.name!==selectedName);
-
   try{
     await updateDoc(doc(db,'runs',S.runId), {
       participants: updatedParticipants,
       [`badges.${selectedName}`]: deleteField(),
       [`icons.${selectedName}`]:  deleteField(),
     });
-    sel.value='';
-    confirmInp.value='';
+    sel.value=''; confirmInp.value='';
     if(S.player===selectedName){
       S.player=null;
       localStorage.removeItem('lastPlayer');
       updateSidebar();
-      toast(`${selectedName} has been removed from the game. Select a new player to continue.`,'t-ok');
+      toast(`${selectedName} has been removed. Select a new player.`,'t-ok');
       showTab('select');
     } else {
-      toast(`${selectedName} has been removed from the game.`,'t-ok');
+      toast(`${selectedName} has been removed.`,'t-ok');
     }
   } catch(e){ toast('Error: '+e.message,'t-err'); }
 }
@@ -2254,7 +2863,6 @@ async function addPlayerToRun(){
   const rd = S.runData;
   if(rd.participants.find(p=>p.name===name)){ toast('Player already exists','t-err'); return; }
   if(rd.participants.length>=8){ toast('Max 8 players','t-err'); return; }
-  // Use next available avatar
   const usedAvatars = rd.participants.map(p=>p.avatar);
   const usedDex = new Set(usedAvatars);
   const avatar = AVATARS.find(a=>!usedDex.has(a))||25;
@@ -2268,23 +2876,17 @@ async function addPlayerToRun(){
 }
 
 /* ──────────────────────────────
-   OVERFLOW CHECK ON PICKS TAB
+   OVERFLOW CHECK
 ────────────────────────────── */
 function checkPicksOverflow(){
   const rd = S.runData; if(!rd||!S.player) return false;
   const n = rd.picksPerPlayer||3;
-  let hasOverflow = false;
-  rd.participants.forEach(p=>{
-    const picks = S.draftPicks[p.name]||[];
-    if(picks.length > n) hasOverflow = true;
-  });
-  return hasOverflow;
+  return rd.participants.some(p=>(S.draftPicks[p.name]||[]).length > n);
 }
 
 /* ──────────────────────────────
    EXPOSE TO INLINE HANDLERS
 ────────────────────────────── */
-/* expose to inline handlers */
 window.addParticipant   = addParticipant;
 window.removeParticipant= removeParticipant;
 window.createRun        = createRun;
@@ -2308,8 +2910,30 @@ window.addPlayerToRun        = addPlayerToRun;
 window.removePlayerFromRun   = removePlayerFromRun;
 window.savePlayerIcon        = savePlayerIcon;
 window.filterIconSearch      = filterIconSearch;
-window.copyRunId             = copyRunId;
 window.confirmRevertPhase    = confirmRevertPhase;
+window.proposeTrade          = proposeTrade;
+window.cancelTrade           = cancelTrade;
+window.acceptTrade           = acceptTrade;
+window.declineTrade          = declineTrade;
+window.confirmTrade          = confirmTrade;
+
+/* ──────────────────────────────
+   INIT
+────────────────────────────── */
+async function init(){
+  const lastId = localStorage.getItem('lastRunId');
+  if(lastId){
+    try{
+      const snap = await getDoc(doc(db,'runs',lastId));
+      if(snap.exists()){
+        S.runId=lastId; S.runData=snap.data();
+        hideLoading(); enterApp(); return;
+      }
+    } catch(e){}
+  }
+  hideLoading();
+  showSetup();
+}
 
 init();
 </script>
