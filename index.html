@@ -944,7 +944,7 @@ input::placeholder { color:var(--muted); }
       <div class="player-grid" id="player-grid"></div>
       <div class="confirm-bar" id="confirm-bar">
         <div class="confirm-bar-text">Playing as <strong id="confirm-name"></strong></div>
-        <button class="btn btn-gold btn-sm" onclick="confirmPlayer()">Confirm & Go to Picks →</button>
+        <button class="btn btn-gold btn-sm" onclick="confirmPlayer()">Confirm & Go to Summary →</button>
       </div>
     </div>
 
@@ -1763,7 +1763,7 @@ function confirmPlayer(){
   S.draftPicks = {};
   rd.participants.forEach(p=>{ S.draftPicks[p.name] = [...(saved[p.name]||[])]; });
   S.currentRecipient = rd.participants[0].name;
-  showTab('picks');
+  showTab('summary');
 }
 
 /* ──────────────────────────────
@@ -2939,4 +2939,5 @@ init();
 </script>
 </body>
 </html>
+
 
