@@ -1763,7 +1763,7 @@ function confirmPlayer(){
   S.draftPicks = {};
   rd.participants.forEach(p=>{ S.draftPicks[p.name] = [...(saved[p.name]||[])]; });
   S.currentRecipient = rd.participants[0].name;
-  showTab('summary');
+  showTab('picks');
 }
 
 /* ──────────────────────────────
@@ -2939,3 +2939,4 @@ init();
 </script>
 </body>
 </html>
+
