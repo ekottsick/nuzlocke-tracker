@@ -413,10 +413,31 @@ input::placeholder { color:var(--muted); }
   background:var(--surface2); border:1px solid var(--border);
   padding:8px 6px; text-align:center; vertical-align:bottom;
 }
-.mch-avatar { display:block; margin-bottom:3px; width:32px; height:32px; margin-left:auto; margin-right:auto; }
-.mch-avatar img { width:32px; height:32px; image-rendering:pixelated; object-fit:contain; }
+.mch-avatar { display:block; margin-bottom:3px; width:48px; height:48px; margin-left:auto; margin-right:auto; }
+.mch-avatar img { width:48px; height:48px; object-fit:contain; }
 .mch-name   { font-family:var(--font-px); font-size:7px; color:var(--text); display:block; margin-bottom:6px; }
 .mch-badges { display:flex; gap:2px; justify-content:center; flex-wrap:wrap; }
+
+/* BST footer row */
+.bst-footer-cell {
+  background:var(--surface2); border:1px solid var(--border);
+  padding:12px 8px; text-align:center; vertical-align:middle;
+}
+.bst-footer-label {
+  font-family:var(--font-px); font-size:6px;
+  color:var(--muted); letter-spacing:.08em;
+  text-transform:uppercase; display:block; margin-bottom:6px;
+}
+.bst-footer-value {
+  font-family:var(--font-px); font-size:18px;
+  color:var(--gold);
+  text-shadow: 0 0 12px rgba(255,209,102,.6), 2px 2px 0 var(--gold-dark);
+  display:block; line-height:1;
+}
+.bst-footer-alive {
+  font-family:var(--font-px); font-size:7px;
+  color:var(--green); display:block; margin-top:5px;
+}
 
 .matrix-row-header {
   background:var(--surface2); border:1px solid var(--border);
@@ -424,8 +445,8 @@ input::placeholder { color:var(--muted); }
   text-align:right; white-space:nowrap;
 }
 .mrh-inner { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-.mrh-avatar { line-height:1; width:28px; height:28px; }
-.mrh-avatar img { width:28px; height:28px; image-rendering:pixelated; object-fit:contain; }
+.mrh-avatar { line-height:1; width:40px; height:40px; }
+.mrh-avatar img { width:40px; height:40px; object-fit:contain; }
 .mrh-name   { font-family:var(--font-px); font-size:6px; color:var(--text2); }
 
 .matrix-cell {
@@ -1448,6 +1469,82 @@ const TYPE_COLORS = {
   fairy:   'rgba(240,182,188,.18)',
 };
 
+// Base Stat Totals for Gen 1-3 (Dex #1-386)
+const BST = {
+  1:318,2:405,3:525,4:309,5:405,6:534,
+  7:314,8:405,9:530,10:195,11:205,12:395,
+  13:195,14:205,15:395,16:251,17:349,18:479,
+  19:253,20:413,21:262,22:442,23:288,24:448,
+  25:320,26:485,27:300,28:450,29:275,30:365,
+  31:505,32:273,33:365,34:505,35:323,36:483,
+  37:299,38:505,39:270,40:435,41:245,42:455,
+  43:298,44:395,45:490,46:285,47:405,48:305,
+  49:450,50:265,51:405,52:290,53:440,54:320,
+  55:500,56:305,57:455,58:325,59:555,60:300,
+  61:385,62:510,63:310,64:400,65:500,66:305,
+  67:405,68:505,69:300,70:390,71:490,72:335,
+  73:515,74:300,75:390,76:495,77:305,78:500,
+  79:315,80:490,81:325,82:465,83:352,84:310,
+  85:450,86:325,87:475,88:325,89:500,90:305,
+  91:525,92:310,93:405,94:500,95:385,96:328,
+  97:483,98:325,99:475,100:330,101:480,102:325,
+  103:520,104:330,105:425,106:455,107:455,108:385,
+  109:340,110:490,111:345,112:485,113:450,114:395,
+  115:490,116:295,117:440,118:320,119:450,120:340,
+  121:520,122:460,123:500,124:455,125:490,126:495,
+  127:500,128:490,129:200,130:540,131:535,132:288,
+  133:325,134:525,135:525,136:525,137:395,138:355,
+  139:495,140:355,141:495,142:515,143:540,144:580,
+  145:580,146:580,147:300,148:420,149:600,150:680,
+  151:600,
+  152:318,153:405,154:525,155:309,156:405,157:534,
+  158:314,159:405,160:530,161:245,162:415,163:262,
+  164:442,165:265,166:390,167:269,168:390,169:535,
+  170:330,171:460,172:205,173:218,174:230,175:245,
+  176:405,177:320,178:470,179:280,180:365,181:510,
+  182:490,183:250,184:420,185:410,186:500,187:250,
+  188:340,189:460,190:360,191:180,192:425,193:390,
+  194:315,195:430,196:525,197:525,198:405,199:490,
+  200:435,201:360,202:405,203:455,204:290,205:465,
+  206:415,207:430,208:510,209:300,210:450,211:440,
+  212:500,213:505,214:500,215:430,216:330,217:500,
+  218:250,219:410,220:250,221:450,222:380,223:255,
+  224:480,225:330,226:465,227:465,228:330,229:500,
+  230:540,231:330,232:500,233:515,234:440,235:250,
+  236:210,237:455,238:305,239:360,240:360,241:490,
+  242:540,243:580,244:580,245:580,246:300,247:410,
+  248:600,249:680,250:680,251:600,
+  252:310,253:405,254:530,255:310,256:405,257:530,
+  258:310,259:405,260:535,261:220,262:420,263:220,
+  264:420,265:195,266:205,267:395,268:205,269:385,
+  270:220,271:350,272:480,273:220,274:340,275:480,
+  276:270,277:455,278:270,279:430,280:198,281:278,
+  282:518,283:269,284:454,285:295,286:460,287:258,
+  288:355,289:670,290:217,291:456,292:292,293:240,
+  294:334,295:461,296:237,297:474,298:190,299:375,
+  300:222,301:400,302:380,303:380,304:330,305:430,
+  306:530,307:280,308:410,309:295,310:475,311:405,
+  312:405,313:360,314:360,315:335,316:302,317:467,
+  318:305,319:460,320:255,321:500,322:240,323:460,
+  324:470,325:280,326:470,327:360,328:290,329:340,
+  330:520,331:240,332:475,333:310,334:490,335:458,
+  336:458,337:440,338:440,339:250,340:420,341:308,
+  342:468,343:285,344:500,345:355,346:495,347:355,
+  348:495,349:200,350:540,351:420,352:440,353:294,
+  354:474,355:295,356:455,357:460,358:420,359:465,
+  360:260,361:300,362:480,363:290,364:410,365:530,
+  366:345,367:485,368:485,369:485,370:330,371:300,
+  372:420,373:600,374:300,375:420,376:600,377:580,
+  378:580,379:580,380:580,381:580,382:670,383:670,
+  384:680,385:600,386:600
+};
+
+function calcAvgBST(dexList){
+  if(!dexList||dexList.length===0) return null;
+  const total = dexList.reduce((s,d)=> s + (BST[d]||0), 0);
+  return Math.round(total / dexList.length);
+}
+
 const BADGES      = ["🪨","🌊","⚡","🌈","🔴","🌊","🔥","🌿"];
 const BADGE_NAMES = ["Boulder","Cascade","Thunder","Rainbow","Soul","Marsh","Volcano","Earth"];
 const AVATARS = [25,6,3,9,94,149,131,143,196,197,248,245,244,243,151];
@@ -1474,10 +1571,10 @@ const S = {
   rvCurrentRecipient: null,
   rvRevealedPlayers:  [],
   // trade
-  trades:          [],   // live list from Firestore
-  tradeMyDex:      null, // selected dex from my team
-  tradeTheirDex:   null, // selected dex from their team
-  tradeOpponent:   null, // opponent player name
+  trades:          [],
+  tradeMyDex:      null,
+  tradeTheirDex:   null,
+  tradeOpponent:   null,
 };
 
 /* ──────────────────────────────
@@ -1526,7 +1623,6 @@ function showApp(){
 }
 
 function showTab(name){
-  // Block trade tab if not in playing phase
   if(name==='trade' && S.runData?.phase !== 'playing') return;
 
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1554,7 +1650,6 @@ function updateSidebar(){
     nameEl.textContent = S.player || '—';
   }
 
-  // Trade tab enabled/disabled
   const navTrade = document.getElementById('nav-trade');
   if(rd.phase === 'playing'){
     navTrade.classList.remove('nav-disabled');
@@ -1562,7 +1657,6 @@ function updateSidebar(){
     navTrade.classList.add('nav-disabled');
   }
 
-  // Trade badge count
   updateTradeBadge();
 }
 
@@ -1571,7 +1665,6 @@ function updateTradeBadge(){
   const badgeEl = document.getElementById('trade-nav-badge');
   if(!badgeEl) return;
 
-  // Count trades involving this player that are active (pending or accepted)
   const active = S.trades.filter(t => {
     if(t.status === 'finalized' || t.status === 'declined' || t.status === 'cancelled') return false;
     return t.proposerName === S.player || t.recipientName === S.player;
@@ -1952,8 +2045,16 @@ function renderSummary(){
       const earned = b<badges;
       badgeHtml+=`<span class="badge-ico ${earned?'earned':''}" title="${BADGE_NAMES[b]}" onclick="toggleBadge('${recipient.name}',${ri},${b})"><img src="./badges/${b+1}.png" alt="${BADGE_NAMES[b]}"/></span>`;
     }
+
+    // Collect all dex numbers in this recipient's team (across all pickers)
+    const teamDex = [];
+    ps.forEach(picker=>{
+      const pickerPicks = (picks[picker.name]||{})[recipient.name]||[];
+      pickerPicks.forEach(d=> teamDex.push(d));
+    });
+
     const th = document.createElement('th'); th.className='matrix-col-header';
-    th.innerHTML=`<div class="mch-avatar">${avatarImg(recipient.avatar,32)}</div>
+    th.innerHTML=`<div class="mch-avatar">${avatarImg(recipient.avatar,48)}</div>
       <span class="mch-name">${recipient.name}</span>
       <div class="mch-badges">${badgeHtml}</div>`;
     hrow.appendChild(th);
@@ -1966,7 +2067,8 @@ function renderSummary(){
   ps.forEach(picker=>{
     const tr = document.createElement('tr');
     const rh = document.createElement('td'); rh.className='matrix-row-header';
-    rh.innerHTML=`<div class="mrh-inner"><div class="mrh-avatar">${avatarImg(picker.avatar,28)}</div><span class="mrh-name">${picker.name}</span></div>`;
+    // FIXED: using 40px to match settings page icon quality
+    rh.innerHTML=`<div class="mrh-inner"><div class="mrh-avatar">${avatarImg(picker.avatar,40)}</div><span class="mrh-name">${picker.name}</span></div>`;
     tr.appendChild(rh);
 
     ps.forEach(recipient=>{
@@ -2050,7 +2152,6 @@ function renderSummary(){
           realName.className = 'mp-realname';
           realName.textContent = (nickname && nickname!==poke[1]) ? poke[1] : '';
 
-          // Trade icon overlay
           if(isTraded){
             const tradeIcon = document.createElement('span');
             tradeIcon.className = 'mp-trade-icon';
@@ -2074,6 +2175,43 @@ function renderSummary(){
   });
 
   table.appendChild(tbody);
+
+  // BST FOOTER ROW — only after reveal night (phase === 'playing')
+  if(rd.phase === 'playing'){
+    const tfoot = document.createElement('tfoot');
+    const bstRow = document.createElement('tr');
+
+    // Corner cell
+    const bstCorner = document.createElement('td'); bstCorner.className='bst-footer-cell';
+    bstCorner.innerHTML='<span class="bst-footer-label">Avg BST</span>';
+    bstRow.appendChild(bstCorner);
+
+    ps.forEach(recipient=>{
+      const teamDex = [];
+      ps.forEach(picker=>{
+        const pickerPicks = (picks[picker.name]||{})[recipient.name]||[];
+        pickerPicks.forEach(d=> teamDex.push(d));
+      });
+      const aliveDex = teamDex.filter(dex=>{
+        return !ps.some(picker=>{
+          const key=`${picker.name}__${recipient.name}__${dex}`;
+          return (deaths[key]||{dead:false}).dead;
+        });
+      });
+      const avgBST = calcAvgBST(teamDex);
+      const avgBSTAlive = aliveDex.length !== teamDex.length ? calcAvgBST(aliveDex) : null;
+
+      const td = document.createElement('td'); td.className='bst-footer-cell';
+      td.innerHTML = avgBST !== null
+        ? `<span class="bst-footer-value">${avgBST}</span>${avgBSTAlive !== null ? `<span class="bst-footer-alive">alive: ${avgBSTAlive}</span>` : ''}`
+        : `<span class="bst-footer-value" style="color:var(--muted)">—</span>`;
+      bstRow.appendChild(td);
+    });
+
+    tfoot.appendChild(bstRow);
+    table.appendChild(tfoot);
+  }
+
   wrap.appendChild(table);
   content.appendChild(wrap);
 }
@@ -2300,8 +2438,6 @@ async function finishReveal(){
 /* ──────────────────────────────
    TRADE TAB
 ────────────────────────────── */
-
-// Returns all dex numbers currently in a player's recipient column (their team)
 function getPlayerTeam(playerName){
   const rd = S.runData; if(!rd) return [];
   const picks = rd.picks||{};
@@ -2313,7 +2449,6 @@ function getPlayerTeam(playerName){
   return team;
 }
 
-// Returns set of dex numbers currently locked in a pending/accepted trade
 function getLockedDex(){
   const locked = new Set();
   S.trades.forEach(t=>{
@@ -2391,7 +2526,6 @@ function renderTradeOpponentTabs(){
   const rd = S.runData;
   const others = rd.participants.filter(p=>p.name!==S.player);
 
-  // Default to first opponent if none selected
   if(!S.tradeOpponent && others.length>0) S.tradeOpponent = others[0].name;
 
   others.forEach(p=>{
@@ -2465,7 +2599,6 @@ async function proposeTrade(){
   if(!S.tradeMyDex || !S.tradeTheirDex || !S.tradeOpponent){ toast('Select a Pokémon from each side','t-err'); return; }
   if(!S.player){ toast('No player selected','t-err'); return; }
 
-  // Double-check not locked
   const locked = getLockedDex();
   if(locked.has(S.tradeMyDex) || locked.has(S.tradeTheirDex)){
     toast('One of those Pokémon is already in an active trade','t-err'); return;
@@ -2494,13 +2627,11 @@ function renderTradeOffersList(){
   const el = document.getElementById('trade-offers-list'); if(!el) return;
   el.innerHTML='';
 
-  // Split trades into relevant ones
   const relevant = S.trades.filter(t=>
     (t.proposerName===S.player || t.recipientName===S.player) &&
     t.status !== 'finalized' && t.status !== 'cancelled' && t.status !== 'declined'
   );
 
-  // Also show recently finalized (last 5, for context)
   const finalized = S.trades
     .filter(t=>(t.proposerName===S.player || t.recipientName===S.player) && t.status==='finalized')
     .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
@@ -2511,10 +2642,8 @@ function renderTradeOffersList(){
     return;
   }
 
-  // Active trades first
   relevant.forEach(t=> el.appendChild(buildTradeCard(t)));
 
-  // Finalized trades section
   if(finalized.length>0){
     const hdr = document.createElement('div');
     hdr.style.cssText='font-family:var(--font-px);font-size:7px;color:var(--muted);margin:16px 0 10px;';
@@ -2531,7 +2660,6 @@ function buildTradeCard(t){
   const propPoke = pokeName(t.proposerDex);
   const recPoke  = pokeName(t.recipientDex);
 
-  // Label + styling
   let labelClass, labelText, cardClass;
   if(t.status==='finalized'){
     labelClass='lbl-accepted'; labelText='✓ FINALIZED'; cardClass='';
@@ -2550,16 +2678,13 @@ function buildTradeCard(t){
   const card = document.createElement('div');
   card.className = `trade-offer-card ${cardClass}`;
 
-  // Header
   const hdr = document.createElement('div'); hdr.className='toc-header';
   hdr.innerHTML=`<span class="toc-label ${labelClass}">${labelText}</span>
     <span style="font-size:11px;color:var(--muted)">${isProposer?'→ '+t.recipientName:'← '+t.proposerName}</span>`;
   card.appendChild(hdr);
 
-  // Pokemon row
   const pokeRow = document.createElement('div'); pokeRow.className='toc-pokemon-row';
 
-  // Proposer's pokemon (left side — always the proposer's side)
   const p1 = document.createElement('div'); p1.className='toc-poke';
   p1.innerHTML=`<img src="${sprite(t.proposerDex)}" alt="${propPoke}"/>
     <div class="toc-pname">${propPoke}</div>
@@ -2578,7 +2703,6 @@ function buildTradeCard(t){
   pokeRow.appendChild(p2);
   card.appendChild(pokeRow);
 
-  // Action buttons
   if(t.status !== 'finalized'){
     const actions = document.createElement('div'); actions.className='toc-actions';
 
@@ -2622,11 +2746,6 @@ function buildTradeCard(t){
       actions.appendChild(cancelBtn);
     }
 
-    if(t.status==='accepted' && isRecipient){
-      // Recipient is waiting — can no longer change their mind once accepted
-      // (per spec: sender must confirm, recipient already accepted)
-    }
-
     card.appendChild(actions);
   }
 
@@ -2658,22 +2777,17 @@ async function declineTrade(tradeId){
 }
 
 async function confirmTrade(t){
-  // Execute the swap
   const rd = S.runData;
-  const picks = JSON.parse(JSON.stringify(rd.picks||{})); // deep copy
+  const picks = JSON.parse(JSON.stringify(rd.picks||{}));
 
   const proposerDex  = t.proposerDex;
   const recipientDex = t.recipientDex;
   const proposerName  = t.proposerName;
   const recipientName = t.recipientName;
 
-  // Find and swap the dex numbers in the recipient arrays
-  // proposerDex lives in proposerName's column somewhere
-  // recipientDex lives in recipientName's column somewhere
   let swappedProposer = false, swappedRecipient = false;
 
   Object.keys(picks).forEach(picker=>{
-    // Swap proposerDex out of proposerName's column
     if(picks[picker][proposerName]){
       const idx = picks[picker][proposerName].indexOf(proposerDex);
       if(idx !== -1){
@@ -2681,7 +2795,6 @@ async function confirmTrade(t){
         swappedProposer = true;
       }
     }
-    // Swap recipientDex out of recipientName's column
     if(picks[picker][recipientName]){
       const idx = picks[picker][recipientName].indexOf(recipientDex);
       if(idx !== -1){
@@ -2696,9 +2809,6 @@ async function confirmTrade(t){
     return;
   }
 
-  // Migrate death keys
-  // Old: Picker__ProposerName__proposerDex → Picker__ProposerName__recipientDex
-  // Old: Picker__RecipientName__recipientDex → Picker__RecipientName__proposerDex
   const deaths = JSON.parse(JSON.stringify(rd.deaths||{}));
   const deathUpdates = {};
 
@@ -2708,12 +2818,10 @@ async function confirmTrade(t){
       const [picker, column, dexStr] = parts;
       const dex = parseInt(dexStr);
       if(column===proposerName && dex===proposerDex){
-        // This card is moving to recipientName's column
         const newKey = `${picker}__${proposerName}__${recipientDex}`;
         deathUpdates[`deaths.${key}`] = deleteField();
         deathUpdates[`deaths.${newKey}`] = deaths[key];
       } else if(column===recipientName && dex===recipientDex){
-        // This card is moving to proposerName's column
         const newKey = `${picker}__${recipientName}__${proposerDex}`;
         deathUpdates[`deaths.${key}`] = deleteField();
         deathUpdates[`deaths.${newKey}`] = deaths[key];
@@ -2721,13 +2829,10 @@ async function confirmTrade(t){
     }
   });
 
-  // Mark both dex positions as traded (keyed by RecipientName__dex after the swap)
-  // After swap: proposerDex is now in recipientName's column, recipientDex in proposerName's
   const tradedCardKey1 = `${recipientName}__${proposerDex}`;
   const tradedCardKey2 = `${proposerName}__${recipientDex}`;
 
   try{
-    // Build the full update object
     const updateObj = {
       picks,
       [`tradedCards.${tradedCardKey1}`]: true,
@@ -2736,7 +2841,6 @@ async function confirmTrade(t){
     };
     await updateDoc(doc(db,'runs',S.runId), updateObj);
 
-    // Mark trade as finalized
     const tradeRef = doc(db,'runs',S.runId,'trades',t.id);
     await updateDoc(tradeRef, {status:'finalized'});
 
@@ -2939,5 +3043,3 @@ init();
 </script>
 </body>
 </html>
-
-
